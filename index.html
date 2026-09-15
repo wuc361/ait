@@ -1,0 +1,2590 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AIT Softball</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+
+<!-- ================= 🔥 Firebase 雲端同步 + 登入驗證 SDK ================= -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore, doc, setDoc, onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import {
+    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCi1XDN3T_GJ4mAa3k9uN2-zGtFlFyW7jA",
+    authDomain: "aitsoftball.firebaseapp.com",
+    projectId: "aitsoftball",
+    storageBucket: "aitsoftball.firebasestorage.app",
+    messagingSenderId: "794366868310",
+    appId: "1:794366868310:web:93c829af9bd890da4974f7",
+    measurementId: "G-4V509652QK"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  window.__fb = {
+    db, doc, setDoc, onSnapshot,
+    auth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+  };
+  window.__fbLoaded = true;
+</script>
+
+<style>
+  :root{
+    --brand-blue:#005a9c;
+    --brand-blue-dark:#012a5e;
+    --brand-blue-light:#eaf3fb;
+    --brand-red:#ef3e42;
+    --brand-white:#ffffff;
+  }
+
+  #cloudLoading {
+    position: fixed; inset: 0; z-index: 6000;
+    background: #1c1c1e; color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; font-size: 14px;
+  }
+  #cloudLoading .spinner {
+    width: 34px; height: 34px; border: 3px solid rgba(255,255,255,0.25);
+    border-top-color: #ffcc00; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #appContent { display: none; }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+  html, body { overscroll-behavior-y: contain; }
+  body {
+    font-family: "Oswald", -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background: #f2f4f7;
+    margin: 0;
+    padding: 0 12px 100px;
+  }
+  h1 {
+    font-size: 22px; text-align: center; margin: 14px 0 12px; color: var(--brand-blue-dark);
+    text-transform: uppercase; font-weight: 700; letter-spacing: 1px;
+  }
+  h2 {
+    font-size: 15px; color: #1c1c1e; margin: 22px 0 8px; display:flex; align-items:center; justify-content:space-between; padding-left: 10px;
+    text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;
+  }
+  #pageNews h2 { border-left: 4px solid var(--brand-red); }
+  #pageRoster h2 { border-left: 4px solid var(--brand-blue); }
+  #pageLineup h2 { border-left: 4px solid #34c759; }
+  #pageScore h2 { border-left: 4px solid #ff9500; }
+  #pageSchedule h2 { border-left: 4px solid #5856d6; }
+  .section-actions { display:flex; gap:6px; flex-wrap: wrap; align-items: center; }
+  .section-actions button { font-size:12px; padding:6px 10px; }
+  #scheduleMonthFilter {
+    padding: 6px 10px; font-size: 13px; border: 1px solid #d1d1d6; border-radius: 8px; background: white;
+  }
+
+  input[type="text"], input[type="date"], input[type="number"], input[type="password"] {
+    padding: 12px; font-size: 16px; border: 1px solid #d1d1d6; border-radius: 10px;
+    -webkit-appearance: none; -webkit-user-select: text; user-select: text; width: 100%;
+    font-family: inherit;
+  }
+  button {
+    border: none; border-radius: 8px; font-size: 14px; padding: 10px 12px; cursor: pointer; -webkit-appearance: none;
+    font-family: inherit; letter-spacing: 0.5px;
+  }
+  .btn-add { background: var(--brand-blue); color: white; font-weight: 700; text-transform: uppercase; }
+  .btn-danger { background: var(--brand-red); color: white; font-weight: 700; text-transform: uppercase; }
+  .btn-muted { background: #e5e5ea; color: #1c1c1e; font-weight: 600; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  .empty-msg { text-align: center; color: #8e8e93; margin: 16px 0; font-size: 14px; }
+
+  /* ==================================================================
+     🟦 NEWS 頁面內嵌導覽列（放在建物圖片下方，非跨頁固定）
+     ================================================================== */
+  .news-navbar-wrap { position: relative; margin: 0 -12px 12px; }
+  .top-navbar {
+    background: linear-gradient(180deg, var(--brand-blue) 0%, var(--brand-blue-dark) 100%);
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 10px;
+    overflow-x: auto; white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    border-radius: 12px;
+  }
+.navbar-logo {
+  width: 30px; height: 30px; border-radius: 6px;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-right: 4px;
+  overflow: hidden;
+}
+  .nav-link {
+    background: none; color: rgba(255,255,255,0.85); font-weight: 700; font-size: 12.5px;
+    padding: 8px 9px; border-radius: 8px; flex-shrink: 0; letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+  .nav-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+  .nav-sep { color: rgba(255,255,255,0.4); font-size: 12px; flex-shrink: 0; }
+  .nav-more {
+    margin-left: auto; background: rgba(255,255,255,0.15); color: #fff;
+    width: 30px; height: 30px; border-radius: 50%; font-size: 16px; padding: 0; flex-shrink: 0;
+  }
+  .more-menu-dropdown {
+    position: absolute; top: calc(100% + 6px); right: 10px; z-index: 1900;
+    background: #fff; border-radius: 14px; padding: 6px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    display: none; flex-direction: column; gap: 4px; min-width: 160px;
+  }
+  .more-menu-dropdown.show { display: flex; }
+
+  /* ==================================================================
+     🟦 懸浮小漢堡選單（用於 SCHEDULE / ROSTER / LINE UP / SCORES）
+     配色配合網站主色：深藍底
+     ================================================================== */
+.main-menu-fab {
+  position: fixed; top: 14px; left: 14px; z-index: 1800;
+  width: 44px; height: 44px; border-radius: 14px;
+  background: var(--brand-blue-dark); color: #fff; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer;
+}
+  .main-menu-fab .fab-icon { font-size: 20px; line-height: 1; }
+  .main-menu-dropdown {
+    position: fixed; top: 64px; left: 14px; z-index: 1800;
+    background: #fff; border-radius: 14px; padding: 6px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    display: none; flex-direction: column; gap: 4px; min-width: 178px;
+  }
+  .main-menu-dropdown.show { display: flex; }
+  .main-menu-item {
+    text-align: left; background: none; border: none; padding: 11px 12px;
+    border-radius: 10px; font-size: 14px; font-weight: 700; color: #1c1c1e;
+    font-family: inherit;
+  }
+  .main-menu-item.active { background: var(--brand-blue-light); color: var(--brand-blue); }
+  .main-menu-divider { height: 1px; background: #e5e5ea; margin: 4px 2px; }
+
+  .main-page { display: none; padding-top: 4px; }
+  .main-page.active { display: block; }
+  #pageRoster.main-page, #pageLineup.main-page, #pageScore.main-page, #pageSchedule.main-page {
+    padding-top: 58px; /* 保留空間避免內容被懸浮漢堡遮住 */
+  }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 5600; align-items: flex-end; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: #f5f5f7; width: 100%; max-width: 480px; border-radius: 18px 18px 0 0; padding: 16px; max-height: 88vh; overflow-y: auto; }
+  .modal-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .modal-close { background: #e5e5ea; width: 34px; height: 34px; border-radius: 17px; font-size: 15px; padding: 0; }
+  .modal-summary { background: white; border-radius: 12px; padding: 12px; margin-bottom: 12px; font-size: 14px; color: #1c1c1e; line-height: 1.8; }
+  .modal-summary b { color: var(--brand-blue); }
+  .modal-form { background: white; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+  .modal-form h3, .modal-history h3 { font-size: 14px; margin: 0 0 8px; color: #1c1c1e; text-transform:none; }
+  .modal-form label { font-size: 12px; color: #636366; display: block; margin: 7px 0 3px; }
+  .record-item { background: white; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+  .record-item .rec-del { background: #ffe5e5; color: var(--brand-red); width: 30px; height: 30px; font-size: 12px; padding: 0; margin-left: 8px; flex-shrink:0; border-radius: 15px; }
+
+  .confirm-box { max-width: 360px; border-radius: 16px; padding: 20px; }
+  .confirm-message { font-size: 15px; color: #1c1c1e; line-height: 1.6; margin-bottom: 18px; text-align: center; }
+  .confirm-actions { display: flex; gap: 10px; }
+  .confirm-actions button { flex: 1; padding: 12px; font-weight: 600; }
+
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: rgba(28,28,30,0.9); color: white; padding: 10px 18px; border-radius: 20px;
+    font-size: 14px; opacity: 0; pointer-events: none; transition: all 0.25s; z-index: 6100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .roster-panel { background: #ececef; border-radius: 12px; padding: 10px; }
+  .roster-search { margin-bottom: 8px; }
+  .add-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .add-row input[type="text"].name-field { flex: 1; }
+  .add-row input[type="text"].number-field { width: 72px; text-align: center; }
+
+  li.roster-row {
+    background: white; border-radius: 10px; padding: 6px 6px; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 4px; min-height: 46px; box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .roster-handle {
+    width: 30px; height: 40px; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--brand-blue); flex-shrink: 0; background:var(--brand-blue-light); border-radius:8px;
+  }
+  .roster-number {
+    flex-shrink: 0; width: 28px; height: 28px; border-radius: 7px; background: var(--brand-blue-dark); color: white;
+    font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+  }
+  .roster-number.empty { background: #e5e5ea; color: #c7c7cc; }
+  .roster-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .roster-name-btn {
+    text-align: left; background: none; border: none; padding: 3px 2px 0;
+    font-size: 14px; font-weight: 600; color: #1c1c1e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-family: inherit;
+  }
+  .roster-pos-line { font-size: 10.5px; color: #636366; padding: 0 2px; }
+  .roster-pos-line .primary-tag { color: var(--brand-blue); font-weight: 700; }
+  .roster-pos-line .secondary-tag { color: #8e8e93; }
+  .roster-stats { flex-shrink: 0; font-size: 10.5px; color: #48484a; width: 78px; text-align:center; white-space:nowrap; }
+  .roster-badge { flex-shrink:0; font-size:10px; padding:2px 5px; border-radius:5px; background:#e3f7e6; color:#1a7a2e; margin-right:2px; }
+  .roster-trash { background:#ffe5e5; color:var(--brand-red); width:26px; height:26px; font-size:12px; padding:0; border-radius:13px; flex-shrink:0; }
+
+  .modal-number-input {
+    width: 62px; font-size: 18px; font-weight: 700; text-align: center; border: 1px solid #d1d1d6;
+    border-radius: 8px; padding: 10px 4px; -webkit-user-select: text; user-select: text; flex-shrink: 0;
+  }
+  .modal-name-input { flex: 1; font-size: 18px; font-weight: 700; border: 1px solid #d1d1d6; border-radius: 8px; padding: 10px; -webkit-user-select: text; user-select: text; }
+  .pos-row { display: flex; gap: 8px; margin-top: 10px; }
+  .pos-row > div { flex: 1; }
+  .pos-row select { width: 100%; padding: 10px; font-size: 15px; border: 1px solid #d1d1d6; border-radius: 8px; background: white; -webkit-appearance: none; }
+  .pos-row label { font-size: 12px; color: #636366; display: block; margin: 0 0 4px; }
+  .stat-input-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; }
+
+  .game-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+  .game-tab {
+    flex: 1; padding: 10px; font-size: 14px; font-weight: 700; border-radius: 10px;
+    border: none; background: #e5e5ea; color: #1c1c1e; cursor: pointer; transition: all 0.2s;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .game-tab.active { background: var(--brand-blue); color: white; }
+
+  .col-header {
+    display: flex; align-items: center; gap: 4px; padding: 0 6px; margin-bottom: 4px;
+    font-size: 10.5px; color: #8e8e93; font-weight: 600;
+  }
+
+  li.player-row {
+    background: white; border-radius: 10px; padding: 6px 6px; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    touch-action: pan-y; height: 48px; position: relative;
+  }
+  li.player-row.dragging { box-shadow: 0 8px 20px rgba(0,0,0,0.25); opacity: 0.95; background: #f0f7ff; }
+  li.player-row.overridden { border-left: 3px solid #ff9500; }
+  .drag-handle {
+    width: 22px; height: 44px; display: flex; align-items: center; justify-content: center;
+    font-size: 17px; color: #c7c7cc; flex-shrink: 0; touch-action: none; cursor: grab;
+  }
+  .move-buttons { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+  .mv-btn {
+    background: #f0f0f2; color: #636366; width: 22px; height: 21px; font-size: 10px;
+    padding: 0; border-radius: 5px; display: flex; align-items: center; justify-content: center;
+  }
+  .mv-btn:disabled { opacity: 0.25; }
+  .order-num { font-size: 15px; font-weight: 700; color: var(--brand-blue); width: 20px; text-align: center; flex-shrink: 0; }
+  .number-badge {
+    flex-shrink: 0; background: var(--brand-blue-dark); color: white; font-size: 11px; font-weight: 700;
+    width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  }
+  .number-badge.empty { background: #e5e5ea; color: #c7c7cc; }
+  .name-btn {
+    flex: 1; min-width: 0; text-align: left; background: none; border: none; padding: 4px 2px;
+    font-size: 14.5px; font-weight: 600; color: #1c1c1e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-family: inherit;
+  }
+  .stats-text { flex-shrink: 0; font-size: 11px; color: #48484a; text-align: center; width: 92px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .position-select {
+    flex-shrink: 0; width: 62px; font-size: 11.5px; padding: 5px 2px; border: 1px solid #e5e5ea;
+    border-radius: 6px; color: #1c1c1e; background: #fafafa; -webkit-appearance: none; text-align: center;
+  }
+  .position-select.is-override { background: #fff4e5; border-color: #ff9500; color: #b45f00; font-weight:600; }
+  .del-btn { background: #ffe5e5; color: var(--brand-red); width: 26px; height: 26px; font-size: 13px; padding: 0; flex-shrink: 0; border-radius: 13px; }
+
+  .field-wrap { background: #ececef; border-radius: 12px; padding: 10px; }
+  .field-diagram {
+    position: relative; width: 100%; aspect-ratio: 1 / 1.05;
+    background: #3f9142;
+    border-radius: 18px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  }
+  .infield-dirt {
+    position: absolute; width: 62%; height: 34%;
+    top: 62%; left: 50%; transform: translate(-50%,-50%);
+    background: #ecdca3;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.18));
+  }
+  .base-dot {
+    position: absolute; width: 12px; height: 12px; background: white;
+    border-radius: 3px; transform: translate(-50%,-50%) rotate(45deg);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3); pointer-events: none; z-index: 1;
+  }
+  .base-dot.center-dot {
+    width: 14px; height: 14px; border-radius: 50%; transform: translate(-50%,-50%);
+    background: #f4e9c9; box-shadow: 0 0 0 3px rgba(255,255,255,0.5);
+  }
+  .field-slot {
+    position: absolute; transform: translate(-50%,-50%); width: 56px; text-align: center; z-index: 2;
+  }
+  .slot-circle {
+    width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.35);
+    border: 2px dashed rgba(255,255,255,0.85); margin: 0 auto; transition: all 0.15s;
+  }
+  .field-slot.slot-highlight .slot-circle { border-color: var(--brand-blue); background: var(--brand-blue-light); transform: scale(1.15); }
+  .slot-chips { margin-top: 3px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .player-chip {
+    background: var(--brand-blue); color: white; font-size: 11px; font-weight: 600; padding: 4px 8px;
+    border-radius: 12px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    touch-action: none; max-width: 82px; overflow: hidden; text-overflow: ellipsis;
+  }
+  .player-chip.conflict { background: #ff9500; }
+  .player-chip.dh-chip { background: #5856d6; }
+  .player-chip.dragging-source { opacity: 0.35; }
+
+  #fieldGhost {
+    position: fixed; z-index: 1700; pointer-events: none; display:none;
+    background: var(--brand-blue); color: white; font-size: 12px; font-weight:700;
+    padding: 6px 12px; border-radius: 14px; box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+  }
+
+  .bench-strip {
+    margin-top: 10px; background: white; border-radius: 10px; padding: 8px;
+    display: flex; gap: 8px; overflow-x: auto; min-height: 44px; align-items: center;
+    border: 2px dashed transparent;
+  }
+  .bench-strip.slot-highlight { border-color: var(--brand-blue); background: var(--brand-blue-light); }
+  .bench-label { font-size: 10.5px; color: #8e8e93; flex-shrink: 0; white-space: nowrap; }
+  .bench-empty { font-size: 12px; color: #c7c7cc; }
+  .bench-strip .player-chip { background: #1c1c1e; flex-shrink: 0; }
+  .bench-strip .player-chip.dh-chip { background: #5856d6; }
+
+  .line-import-textarea {
+    width: 100%; min-height: 120px; font-size: 14px; padding: 10px; border-radius: 10px;
+    border: 1px solid #d1d1d6; -webkit-user-select: text; user-select: text; resize: vertical;
+    font-family: inherit;
+  }
+  .import-result-ok {
+    background: #e3f7e6; border-radius: 10px; padding: 10px; margin-bottom: 8px;
+    font-size: 13px; color: #1a7a2e; line-height:1.6;
+  }
+  .import-result-skip {
+    background: #eef2f7; border-radius: 10px; padding: 10px; margin-bottom: 8px;
+    font-size: 13px; color: #48484a; line-height:1.6;
+  }
+  .import-result-warn {
+    background: #fff4e5; border-radius: 10px; padding: 10px; font-size: 13px; color: #b45f00; line-height:1.6;
+  }
+  .unmatched-row {
+    display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 8px;
+  }
+  .unmatched-row button { font-size: 11px; padding: 5px 9px; flex-shrink: 0; }
+
+  #copyTextArea { -webkit-user-select: text; user-select: text; }
+
+  .score-wrap { background: #ececef; border-radius: 12px; padding: 10px; }
+  .score-panel-row { display: flex; gap: 8px; align-items: stretch; }
+  .scoreboard-box {
+    flex: 1; background: #22252a; border-radius: 12px; padding: 8px; color: white;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.5); min-width: 0;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .scoreboard-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .scoreboard-table {
+    border-collapse: collapse; text-align: center; font-size: 13px;
+    min-width: 480px;
+  }
+  .scoreboard-table th, .scoreboard-table td { border: 1px solid #3a3d42; }
+  .scoreboard-table th { color: #d1d1d6; font-weight: 700; padding: 6px 2px; background: #2a2d33; font-size: 12px; width: 46px; }
+  .scoreboard-table th:first-child, .scoreboard-table td:first-child { width: 62px; }
+  .scoreboard-table th.r-col, .scoreboard-table td.r-col {
+    color: #ffcc00 !important; -webkit-text-fill-color: #ffcc00 !important;
+    font-weight: 800; font-size: 17px; background: rgba(255,204,0,0.12); width: 52px;
+  }
+  .scoreboard-table td { padding: 0; height: 44px; }
+  .team-select {
+    background: #3a3d42; color: #ffffff; -webkit-text-fill-color: #ffffff; color-scheme: dark;
+    border: none; font-size: 12px; font-weight: 700;
+    padding: 5px 2px; border-radius: 6px; width: 100%; text-align: center; cursor: pointer;
+  }
+  .inning-input {
+    width: 100%; height: 100%; min-height: 40px; box-sizing: border-box;
+    background: transparent; border: none;
+    color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff; color-scheme: dark;
+    text-align: center; font-size: 17px; font-weight: 700; padding: 0;
+    -webkit-user-select: text; user-select: text;
+  }
+  .inning-input::-webkit-outer-spin-button,
+  .inning-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .inning-input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+  .inning-input:focus { outline: none; background: rgba(255,255,255,0.08); }
+
+  .bso-box {
+    width: 105px; background: #1c1d21; border-radius: 12px; padding: 8px 6px; color: white;
+    display: flex; flex-direction: column; justify-content: space-around;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.5); flex-shrink: 0;
+    box-sizing: border-box;
+  }
+  .bso-row { display: flex; align-items: center; justify-content: flex-start; gap: 10px; cursor: pointer; padding: 2px 0; }
+  .bso-label { font-weight: 900; font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+  .bso-label.b-lbl { color: #34c759; }
+  .bso-label.s-lbl { color: #ffcc00; }
+  .bso-label.o-lbl { color: var(--brand-red); }
+  .bso-dots { display: flex; gap: 4px; }
+  .dot { width: 13px; height: 13px; border-radius: 50%; background: #3a3d42; transition: all 0.15s; }
+  .dot.active-b { background: #34c759; box-shadow: 0 0 6px #34c759; }
+  .dot.active-s { background: #ffcc00; box-shadow: 0 0 6px #ffcc00; }
+  .dot.active-o { background: var(--brand-red); box-shadow: 0 0 6px var(--brand-red); }
+  .bso-reset-btn {
+    background: #3a3d42; color: #d1d1d6; font-size: 10px; border-radius: 4px;
+    padding: 3px 0; text-align: center; margin-top: 4px; cursor: pointer; font-weight: 600;
+  }
+
+  .boxscore-wrap {
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    border-radius: 10px; background: white;
+  }
+  .boxscore-table { border-collapse: collapse; width: 100%; min-width: 560px; }
+  .boxscore-table th, .boxscore-table td { border: 1px solid #e5e5ea; padding: 4px; font-size: 12px; text-align: center; }
+  .boxscore-table th { background: #f0f0f2; color: #48484a; }
+
+  .boxscore-table th.col-order, .boxscore-table td.col-order {
+    position: sticky; left: 0; z-index: 2;
+    width: 36px; min-width: 36px; max-width: 36px;
+  }
+  .boxscore-table th.col-name, .boxscore-table td.col-name {
+    position: sticky; left: 36px; z-index: 2;
+    width: 88px; min-width: 88px; max-width: 88px;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.10);
+  }
+  .boxscore-table thead th.col-order, .boxscore-table thead th.col-name { background: #f0f0f2; z-index: 3; }
+  .boxscore-table tbody td.col-order, .boxscore-table tbody td.col-name { background: #ffffff; }
+
+  .box-cell-empty-btn { width: 28px; height: 28px; border-radius: 14px; background: #f0f0f2; color: #8e8e93; font-size: 15px; padding: 0; }
+  .box-chip {
+    display: inline-flex; align-items: center; gap: 4px; background: var(--brand-blue); color: white;
+    font-size: 11px; font-weight: 700; padding: 3px 6px; border-radius: 8px;
+  }
+  .box-chip.res-HR { background: #1a7a2e; }
+  .box-chip.res-BB { background: #4b49b0; }
+  .box-chip.res-FC { background: #b45f00; }
+  .box-chip.res-E { background: #b0002b; }
+  .box-chip.res-OUT { background: #6e6e73; }
+  .box-chip-del {
+    background: rgba(255,255,255,0.3); border-radius: 50%; width: 14px; height: 14px;
+    font-size: 9px; line-height: 14px; text-align: center; cursor: pointer; flex-shrink: 0;
+  }
+  .boxscore-out-row td { background:#fff4e5; font-weight:800; color:#b45f00; }
+  .boxscore-table tr.boxscore-out-row td.col-sticky-out {
+    position: sticky; left: 0; z-index: 2;
+    width: 124px; min-width: 124px;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.10);
+  }
+  .save-indicator { font-size: 11px; color: #ff9500; font-weight: 700; margin-left: 4px; }
+
+  .outcome-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 6px; }
+  .outcome-btn { padding: 14px 4px; font-size: 13px; font-weight: 700; border-radius: 10px; color: white; }
+  .outcome-btn.res-1B, .outcome-btn.res-2B, .outcome-btn.res-3B { background: var(--brand-blue); }
+  .outcome-btn.res-HR { background: #34c759; }
+  .outcome-btn.res-BB { background: #5856d6; }
+  .outcome-btn.res-E { background: #ff2d55; }
+  .outcome-btn.res-FC { background: #ff9500; }
+  .outcome-btn.res-OUT { background: #8e8e93; }
+
+  /* ==================================================================
+     🟥 NEWS 大廳首頁樣式
+     ================================================================== */
+  .news-hero {
+    width: 100%; height: 180px; border-radius: 14px; margin-bottom: 12px;
+    background-image: url('images/ait-building.jpg'); /* 請替換成實際圖片路徑或 URL */
+    background-size: cover; background-position: center; background-color: #d1d1d6;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  }
+  .news-schedule-table { width: 100%; border-collapse: collapse; }
+  .news-schedule-table th, .news-schedule-table td {
+    border: 1px solid #e5e5ea; padding: 8px; text-align: center; font-size: 13px;
+  }
+  .news-schedule-table th {
+    background: var(--brand-blue-dark); color: #fff; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  /* 最接近的下一場賽程 highlight */
+  .news-schedule-table tr.next-match-highlight td {
+    background: var(--brand-blue-light);
+    font-weight: 800;
+    color: var(--brand-blue-dark);
+    position: relative;
+  }
+.news-schedule-table tr.next-match-highlight td {
+  background: var(--brand-blue-light);
+  font-weight: 800;
+  color: var(--brand-blue-dark);
+  position: relative;
+}
+  .news-scores-section { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .news-scores-column { flex: 1; min-width: 260px; }
+  .news-scores-column h3 {
+    font-size: 14px; color: var(--brand-blue-dark); margin-bottom: 6px;
+    text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;
+  }
+  .placeholder-box {
+    background-color: #fafafa; border: 1px dashed #bbb; border-radius: 10px;
+    padding: 16px; text-align: center; color: #888; font-size: 13px;
+  }
+  .game-row { padding: 8px 0; border-bottom: 1px solid #eee; text-align: left; font-size: 13px; }
+  .game-status { font-size: 11px; color: #666; margin-top:2px; }
+
+  /* 中職官網 iframe 嵌入區塊 */
+  .cpbl-iframe-wrap {
+    position: relative; width: 100%; height: 420px;
+    border-radius: 10px; overflow: hidden; border: 1px solid #ddd; background: #fff;
+  }
+  .cpbl-iframe-wrap iframe { width: 100%; height: 100%; border: 0; }
+  .cpbl-fallback-link {
+    display: block; text-align: center; margin-top: 6px; font-size: 12px;
+    color: var(--brand-blue); font-weight: 600;
+  }
+
+  /* ==================================================================
+     🟪 SECTION 4：賽程表分頁樣式
+     ================================================================== */
+  .hour-select {
+    padding: 6px; font-size: 13px; border: 1px solid #d1d1d6; border-radius: 8px;
+    background: white; -webkit-appearance: none; text-align: center; width: auto;
+  }
+  .match-card {
+    position: relative;
+    background: white; border-radius: 12px; padding: 10px; margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border-left: 4px solid var(--brand-red);
+  }
+  .match-delete-btn {
+    position: absolute; top: 8px; right: 8px;
+    background: #ffe5e5; color: var(--brand-red); width: 24px; height: 24px; border-radius: 12px;
+    font-size: 11px; padding: 0;
+  }
+  .match-top-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .match-top-row input[type="date"] {
+    padding: 6px; font-size: 13px; border: 1px solid #d1d1d6; border-radius: 8px; width: auto;
+  }
+  .match-teams-row { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  .match-teams-row input[type="text"] {
+    flex: 1; padding: 8px; font-size: 14px; font-weight: 700; text-align: center;
+    border: 1px solid #d1d1d6; border-radius: 8px;
+  }
+  .match-vs-label { font-weight: 800; color: #8e8e93; flex-shrink: 0; }
+  .team-b-fixed {
+    flex: 1; padding: 8px; font-size: 14px; font-weight: 800; text-align: center;
+    border: 1px solid #d1d1d6; border-radius: 8px; background: #f0f0f2; color: #1c1c1e;
+  }
+  .match-result-badge { font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; white-space: nowrap; text-transform: uppercase; }
+  .match-result-badge.win { background: var(--brand-blue); color: #fff; }
+  .match-result-badge.loss { background: var(--brand-red); color: #fff; }
+  .match-result-badge.tie { background: #8e8e93; color: #fff; }
+  .month-group-title {
+    font-size: 14px; font-weight: 800; margin: 16px 0 6px; color: var(--brand-blue-dark);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .match-header-row, .match-sub-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 30px 4px 2px;
+  }
+  .match-sub-row { margin-top: 4px; padding-top: 8px; border-top: 1px dashed #e0e0e5; }
+  .match-date-big { font-size: 24px; font-weight: 900; color: var(--brand-blue); min-width: 56px; }
+  .match-time-big {
+    font-size: 15px; font-weight: 800; color: #5856d6; background: #eef0ff;
+    padding: 3px 10px; border-radius: 8px; min-width: 56px; text-align: center;
+  }
+  .match-vs-tag { font-size: 13px; font-weight: 800; color: var(--brand-red); letter-spacing: 1px; }
+  .match-team-name-display { flex: 1; font-size: 15px; font-weight: 700; color: #1c1c1e; text-align: center; }
+  .match-score-display { display: flex; align-items: center; gap: 4px; font-weight: 800; font-size: 15px; flex-shrink: 0; }
+  .match-score-display input {
+    width: 40px; padding: 5px 2px; text-align: center; border: 1px solid #d1d1d6; border-radius: 6px; font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== ☁️ 雲端連線中畫面 ===== -->
+<div id="cloudLoading">
+  <div class="spinner"></div>
+  <div>It ain't over till it's over...</div>
+</div>
+
+<!-- 領隊登入 Modal -->
+<div id="loginModalOverlay" class="modal-overlay" onclick="closeLoginModalOnOverlay(event)" style="align-items:center;">
+  <div class="modal-box confirm-box" onclick="event.stopPropagation()">
+    <h3 style="margin-top:0;">領隊登入</h3>
+    <input type="text" id="loginEmail" placeholder="Email" style="margin-bottom:8px;" />
+    <input type="password" id="loginPassword" placeholder="密碼" style="margin-bottom:12px;" />
+    <button class="btn-add" style="width:100%;" onclick="doLogin()">登入</button>
+    <button class="btn-muted" style="width:100%;margin-top:8px;" onclick="closeLoginModal()">取消</button>
+  </div>
+</div>
+
+<div id="appContent">
+
+  <!-- ============================================================= -->
+  <!-- 🟥 NEWS 大廳首頁 -->
+  <!-- ============================================================= -->
+  <div id="pageNews" class="main-page active">
+
+    <h1> AIT SOFTBALL</h1>
+    <div class="news-hero"></div>
+
+    <!-- 🟦 導覽列：位於建物圖片下方（僅存在於 NEWS 頁面內） -->
+    <div class="news-navbar-wrap">
+      <div class="top-navbar">
+        
+<div class="navbar-logo" style="background-image:url('images/ait-logo.jpg'); background-size:cover; background-position:center;"></div>
+
+        <button class="nav-link active" data-page="news" onclick="selectMainPage('news')">NEWS</button>
+        <span class="nav-sep">›</span>
+        <button class="nav-link" data-page="schedule" onclick="selectMainPage('schedule')">SCHEDULE</button>
+        <span class="nav-sep">›</span>
+        <button class="nav-link" data-page="roster" onclick="selectMainPage('roster')">ROSTER</button>
+        <span class="nav-sep">›</span>
+        <button class="nav-link" data-page="lineup" onclick="selectMainPage('lineup')">LINE UP</button>
+        <span class="nav-sep">›</span>
+        <button class="nav-link" data-page="score" onclick="selectMainPage('score')">SCORES</button>
+        <button class="nav-more" onclick="toggleMoreMenu(event)">⋯</button>
+      </div>
+      <div id="moreMenuDropdown" class="more-menu-dropdown">
+        <button class="main-menu-item" onclick="menuClearPreviousDay()">🗑 Re:0</button>
+        <button class="main-menu-item" id="menuLoginItem" onclick="openLoginModal()">🔐 LOG IN</button>
+      </div>
+    </div>
+
+    <h2>Upcoming Matches</h2>
+    <div class="roster-panel" style="overflow-x:auto;">
+      <table class="news-schedule-table">
+        <thead>
+          <tr><th>DATE</th><th>TIME</th><th> VS.</th></tr>
+        </thead>
+        <tbody id="newsScheduleBody"></tbody>
+      </table>
+      <p id="newsScheduleEmptyMsg" class="empty-msg" style="display:none;">No Games</p>
+    </div>
+
+    <h2 style="margin-top:20px;">TODAY's GAMES</h2>
+    <div class="news-scores-section">
+      <div class="news-scores-column">
+        <h3>MLB TODAY</h3>
+        <div id="mlb-scores" class="placeholder-box">載入中...</div>
+      </div>
+      <div class="news-scores-column">
+        <h3>CPBL Schedule</h3>
+        <div class="cpbl-iframe-wrap">
+          <iframe src="https://stats.cpbl.com.tw/schedule" loading="lazy" referrerpolicy="no-referrer"></iframe>
+        </div>
+        <a class="cpbl-fallback-link" href="https://stats.cpbl.com.tw/schedule" target="_blank" rel="noopener">
+          若上方畫面空白無法顯示，請點此在新分頁開啟中職官網賽程
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- 👤 ROSTER 分頁 -->
+  <!-- ============================================================= -->
+  <div id="pageRoster" class="main-page">
+    <h2>ROSTER</h2>
+
+    <div class="roster-panel">
+      <div class="add-row">
+        <input type="text" class="number-field" id="numberInput" placeholder="背號" inputmode="numeric" maxlength="3" />
+        <input type="text" class="name-field" id="nameInput" placeholder="輸入新球員姓名，加入名單" />
+        <button class="btn-add" onclick="addPlayerToRoster()">新增</button>
+      </div>
+      <input type="text" class="roster-search" id="rosterSearch" placeholder="🔍 搜尋球員姓名或背號" oninput="renderRoster()" />
+      <div class="section-actions" style="margin-bottom:8px;">
+        <button id="rosterSortNameBtn" class="btn-muted" onclick="setRosterSort('name')">姓名排序 A→Z</button>
+        <button id="rosterSortCustomBtn" class="btn-add" onclick="setRosterSort('custom')">自定義順序</button>
+      </div>
+      <ul id="rosterList"></ul>
+      <p id="rosterEmptyMsg" class="empty-msg">名單是空的，請先新增球員</p>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- 📋 LINE UP 分頁 -->
+  <!-- ============================================================= -->
+  <div id="pageLineup" class="main-page">
+
+    <div class="game-tabs">
+      <button id="tabGame1" class="game-tab active" onclick="switchGame(1)">1st Game</button>
+      <button id="tabGame2" class="game-tab" onclick="switchGame(2)">2nd Game</button>
+    </div>
+
+    <h2>Order
+      <span class="section-actions">
+        <button class="btn-muted" onclick="copyGame1ToGame2()" title="複製第一場打序到第二場">📋</button>
+        <button class="btn-muted" onclick="shareOrder()">📤</button>
+      </span>
+    </h2>
+
+    <div class="col-header">
+      <div style="width:22px"></div><div style="width:22px"></div><div style="width:20px">#</div>
+      <div style="width:24px">背號</div>
+      <div style="flex:1">姓名</div><div style="width:92px;text-align:center">AVG/OBP/SLG</div>
+      <div style="width:62px;text-align:center">當日守備</div><div style="width:26px"></div>
+    </div>
+    <ul id="lineupList"></ul>
+    <p id="lineupEmptyMsg" class="empty-msg">打序表是空的，從「球員資料」分頁點擊 ⠿ 加入球員，或用下方 LINE 匯入功能</p>
+
+    <h2>Defend Position</h2>
+
+    <div class="field-wrap">
+      <div class="field-diagram" id="fieldDiagram">
+        <div class="infield-dirt"></div>
+        <div class="base-dot" style="top:79%; left:50%;"></div>
+        <div class="base-dot" style="top:62%; left:81%;"></div>
+        <div class="base-dot" style="top:45%; left:50%;"></div>
+        <div class="base-dot" style="top:62%; left:19%;"></div>
+        <div class="base-dot center-dot" style="top:62%; left:50%;"></div>
+      </div>
+      <div class="bench-strip" id="benchStrip">
+        <span class="bench-label">未分配 / DH</span>
+        <span id="benchEmpty" class="bench-empty">（全部已就位）</span>
+      </div>
+    </div>
+
+    <h2>LINE輸入框</h2>
+    <div class="roster-panel">
+      <textarea id="lineImportInput" class="line-import-textarea" placeholder="請貼上 LINE 聊天內容，例如：&#10;1. 王小明&#10;2 陳大文&#10;#5 林小美"></textarea>
+      <button class="btn-add" style="width:100%;margin-top:8px;" onclick="parseLineImport()">分析並新增至第一場打序尾端</button>
+      <div id="lineImportResult" style="margin-top:10px;"></div>
+    </div>
+
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- 🧮 SCORES 分頁 -->
+  <!-- ============================================================= -->
+  <div id="pageScore" class="main-page">
+    <h2>計分板</h2>
+
+    <div class="score-wrap">
+      <div class="score-panel-row">
+        <div class="scoreboard-box">
+          <div class="scoreboard-scroll">
+            <table class="scoreboard-table">
+              <thead>
+                <tr>
+                  <th>隊伍</th>
+                  <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
+                  <th class="r-col">R</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <select class="team-select" id="teamTop" onchange="onTeamChange('top')">
+                      <option value="客隊" selected>客隊</option>
+                      <option value="AIT">AIT</option>
+                    </select>
+                  </td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_1" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_2" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_3" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_4" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_5" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_6" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_7" oninput="calcScore()" /></td>
+                  <td class="r-col" id="top_R">0</td>
+                </tr>
+                <tr>
+                  <td>
+                    <select class="team-select" id="teamBottom" onchange="onTeamChange('bottom')">
+                      <option value="客隊">客隊</option>
+                      <option value="AIT" selected>AIT</option>
+                    </select>
+                  </td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_1" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_2" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_3" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_4" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_5" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_6" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_7" oninput="calcScore()" /></td>
+                  <td class="r-col" id="bot_R">0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bso-box">
+          <div class="bso-row" onclick="addBSO('b')">
+            <span class="bso-label b-lbl">B</span>
+            <div class="bso-dots">
+              <div class="dot" id="b1"></div>
+              <div class="dot" id="b2"></div>
+              <div class="dot" id="b3"></div>
+            </div>
+          </div>
+          <div class="bso-row" onclick="addBSO('s')">
+            <span class="bso-label s-lbl">S</span>
+            <div class="bso-dots">
+              <div class="dot" id="s1"></div>
+              <div class="dot" id="s2"></div>
+            </div>
+          </div>
+          <div class="bso-row" onclick="addBSO('o')">
+            <span class="bso-label o-lbl">O</span>
+            <div class="bso-dots">
+              <div class="dot" id="o1"></div>
+              <div class="dot" id="o2"></div>
+              <div class="dot" id="o3"></div>
+            </div>
+          </div>
+          <div class="bso-reset-btn" onclick="resetBSO()">重置 B/S（保留出局數）</div>
+        </div>
+      </div>
+    </div>
+
+    <h2>打席紀錄表
+      <span class="section-actions">
+        <span id="boxSaveIndicator" class="save-indicator" style="display:none;">● 尚未儲存</span>
+        <button class="btn-add" onclick="saveBoxScoreToday()">💾 SAVE</button>
+      </span>
+    </h2>
+    <div class="game-tabs">
+      <button id="tabBoxGame1" class="game-tab active" onclick="switchBoxGame(1)">1st game</button>
+      <button id="tabBoxGame2" class="game-tab" onclick="switchBoxGame(2)">2nd game</button>
+    </div>
+    <div id="boxScoreTableWrap" class="boxscore-wrap">
+      <table class="boxscore-table">
+        <thead id="boxScoreHead"></thead>
+        <tbody id="boxScoreBody"></tbody>
+      </table>
+    </div>
+    <p id="boxScoreEmptyMsg" class="empty-msg">目前打序是空的，請先到 Line UP 分頁建立打序</p>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- 🟪 SCHEDULE 分頁 -->
+  <!-- ============================================================= -->
+  <div id="pageSchedule" class="main-page">
+    <h2>SCHEDULE</h2>
+
+    <div class="roster-panel">
+      <div class="match-top-row" style="margin-bottom:8px;">
+<input type="date" id="matchDateInput" />
+        <select class="hour-select" id="matchStartInput">
+          <option value="08" selected>08</option>
+          <option value="09">09</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+          <option value="13">13</option>
+          <option value="14">14</option>
+          <option value="15">15</option>
+          <option value="16">16</option>
+          <option value="17">17</option>
+        </select>
+        <span>～</span>
+        <select class="hour-select" id="matchEndInput">
+          <option value="08">08</option>
+          <option value="09">09</option>
+          <option value="10" selected>10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+          <option value="13">13</option>
+          <option value="14">14</option>
+          <option value="15">15</option>
+          <option value="16">16</option>
+          <option value="17">17</option>
+        </select>
+      </div>
+      <div class="match-teams-row">
+        <input type="text" id="matchTeamAInput" placeholder="對手" />
+        <span class="match-vs-label">VS</span>
+        <input type="text" value="AIT" disabled class="team-b-fixed" />
+      </div>
+      <button class="btn-add" style="width:100%;margin-top:10px;" onclick="addMatch()">新增賽程</button>
+    </div>
+
+    <h2 style="margin-top:20px;">依月份查詢
+      <span class="section-actions">
+        <select id="scheduleMonthFilter" onchange="onScheduleMonthFilterChange(this.value)"></select>
+      </span>
+    </h2>
+
+    <div id="scheduleMonthGroups"></div>
+    <p id="scheduleEmptyMsg" class="empty-msg">目前尚無賽程資料</p>
+  </div>
+
+  <div id="modalOverlay" class="modal-overlay" onclick="closeModalOnOverlay(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <input id="modalNumberInput" class="modal-number-input" placeholder="背號" inputmode="numeric" maxlength="3" oninput="updateModalNumber(this.value)" />
+        <input id="modalNameInput" class="modal-name-input" oninput="updateModalName(this.value)" />
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="pos-row">
+        <div>
+          <label>主</label>
+          <select id="primaryPosSelect" onchange="updateModalPrimary(this.value)"></select>
+        </div>
+        <div>
+          <label>副（選填）</label>
+          <select id="secondaryPosSelect" onchange="updateModalSecondary(this.value)"></select>
+        </div>
+      </div>
+
+      <div class="modal-summary" id="modalSummary"></div>
+
+      <div class="modal-form">
+        <h3>新增當日打擊紀錄</h3>
+        <label>日期</label>
+        <input type="date" id="recordDate" />
+        <div class="stat-input-row">
+          <div><label>一安 1B</label><input type="number" min="0" id="rec1B" value="0" /></div>
+          <div><label>二安 2B</label><input type="number" min="0" id="rec2B" value="0" /></div>
+          <div><label>三安 3B</label><input type="number" min="0" id="rec3B" value="0" /></div>
+          <div><label>全壘打 HR</label><input type="number" min="0" id="recHR" value="0" /></div>
+        </div>
+        <div class="stat-input-row">
+          <div><label>四壞 BB</label><input type="number" min="0" id="recBB" value="0" /></div>
+          <div><label>失誤 E</label><input type="number" min="0" id="recE" value="0" /></div>
+          <div><label>野選 FC</label><input type="number" min="0" id="recFC" value="0" /></div>
+          <div><label>出局 Out</label><input type="number" min="0" id="recOuts" value="0" /></div>
+        </div>
+        <button class="btn-add" style="width:100%;margin-top:12px;" onclick="saveRecord()">新增紀錄</button>
+      </div>
+
+      <div class="modal-history">
+        <h3>歷史紀錄</h3>
+        <div id="recordList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="boxPickerOverlay" class="modal-overlay" onclick="closeBoxPickerOnOverlay(event)" style="align-items:center;">
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-width:360px; border-radius:16px;">
+      <div class="modal-header">
+        <span id="boxPickerTitle" style="font-weight:700;font-size:15px;flex:1;"></span>
+        <button class="modal-close" onclick="closeBoxPicker()">✕</button>
+      </div>
+      <div class="outcome-grid">
+        <button class="outcome-btn res-1B" onclick="chooseBoxResult('1B')">一安</button>
+        <button class="outcome-btn res-2B" onclick="chooseBoxResult('2B')">二安</button>
+        <button class="outcome-btn res-3B" onclick="chooseBoxResult('3B')">三安</button>
+        <button class="outcome-btn res-HR" onclick="chooseBoxResult('HR')">全壘打</button>
+        <button class="outcome-btn res-BB" onclick="chooseBoxResult('BB')">四壞</button>
+        <button class="outcome-btn res-E" onclick="chooseBoxResult('E')">失誤</button>
+        <button class="outcome-btn res-FC" onclick="chooseBoxResult('FC')">野選</button>
+        <button class="outcome-btn res-OUT" onclick="chooseBoxResult('OUT')">出局</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="copyModalOverlay" class="modal-overlay" onclick="closeCopyModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-height:60vh;">
+      <div class="modal-header">
+        <span style="font-weight:700;font-size:16px;">複製打序文字</span>
+        <button class="modal-close" onclick="hideCopyModal()">✕</button>
+      </div>
+      <textarea id="copyTextArea" readonly style="width:100%;height:220px;font-size:14px;padding:10px;border-radius:8px;border:1px solid #ddd;"></textarea>
+      <button class="btn-add" style="width:100%;margin-top:10px;" onclick="tryExecCopy()">複製</button>
+    </div>
+  </div>
+
+  <div id="confirmOverlay" class="modal-overlay" onclick="closeConfirmOnOverlay(event)" style="align-items:center;">
+    <div class="modal-box confirm-box" onclick="event.stopPropagation()">
+      <p class="confirm-message" id="confirmMessage"></p>
+      <div class="confirm-actions">
+        <button class="btn-muted" onclick="confirmNo()">取消</button>
+        <button class="btn-danger" onclick="confirmYes()">確定</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 🟦 懸浮小漢堡選單（僅在非 NEWS 分頁顯示，可直接跳往任何分頁） -->
+<div id="floatingMenuFab" class="main-menu-fab" onclick="toggleFloatingMenu(event)" style="display:none;">
+  <span class="fab-icon">☰</span>
+</div>
+<div id="floatingMenuDropdown" class="main-menu-dropdown">
+  <button class="main-menu-item" data-page="news" onclick="selectMainPage('news')">📰 NEWS</button>
+  <button class="main-menu-item" data-page="schedule" onclick="selectMainPage('schedule')">📅 SCHEDULE</button>
+  <button class="main-menu-item" data-page="roster" onclick="selectMainPage('roster')">👤 ROSTER</button>
+  <button class="main-menu-item" data-page="lineup" onclick="selectMainPage('lineup')">📋 LINE UP</button>
+  <button class="main-menu-item" data-page="score" onclick="selectMainPage('score')">🧮 SCORES</button>
+  <div class="main-menu-divider"></div>
+  <button class="main-menu-item" onclick="menuClearPreviousDay()">🗑 RE:0</button>
+  <button class="main-menu-item" id="menuLoginItemFloating" onclick="openLoginModal()">🔐 LOG IN</button>
+</div>
+
+<div id="fieldGhost"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+  /* ==================================================================
+     🔥 Firebase 雲端同步層 + 登入驗證
+     ================================================================== */
+  const TEAM_DOC_ID = 'ait_softball_main';
+
+  let roster = [];
+  let rosterSort = 'custom';
+  let lineups = { game1: [], game2: [] };
+  let boxScore = {};
+  let schedule = { matches: [] };
+  let firebaseReady = false;
+  let isAdminLoggedIn = false;
+
+  function initFirebaseSync() {
+    const { db, doc, onSnapshot, auth, onAuthStateChanged } = window.__fb;
+    const teamRef = doc(db, "teams", TEAM_DOC_ID);
+
+    onAuthStateChanged(auth, (user) => {
+      isAdminLoggedIn = !!user;
+      const menuItem = document.getElementById('menuLoginItem');
+      if (menuItem) menuItem.textContent = isAdminLoggedIn ? '✏️ 登出' : '🔐 登入';
+      const menuItemFloating = document.getElementById('menuLoginItemFloating');
+      if (menuItemFloating) menuItemFloating.textContent = isAdminLoggedIn ? '✏️ 登出' : '🔐 登入';
+    });
+
+    onSnapshot(teamRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        roster = data.roster || [];
+        rosterSort = data.rosterSort || 'custom';
+        lineups = data.lineups || { game1: [], game2: [] };
+        boxScore = data.boxScore || {};
+        schedule = data.schedule || { matches: [] };
+      } else {
+        roster = []; rosterSort = 'custom'; lineups = { game1: [], game2: [] }; boxScore = {};
+        schedule = { matches: getDefaultScheduleMatches() };
+        saveAllToFirebase();
+      }
+
+      if (!firebaseReady) {
+        firebaseReady = true;
+        document.getElementById('cloudLoading').style.display = 'none';
+        document.getElementById('appContent').style.display = 'block';
+        loadMLBScores();
+      }
+
+      isBoxDirty = false;
+      updateBoxSaveIndicator();
+      renderBoxScoreHeader();
+      render();
+      renderSchedule();
+    }, (error) => {
+      console.error('Firebase 同步失敗：', error);
+      document.getElementById('cloudLoading').innerHTML =
+        '<div style="color:#ff3b30;">⚠️ 雲端連線失敗，請檢查網路後重新整理頁面</div>';
+    });
+  }
+
+  function saveAllToFirebase() {
+    const { db, doc, setDoc } = window.__fb;
+    const teamRef = doc(db, "teams", TEAM_DOC_ID);
+    setDoc(teamRef, { roster, rosterSort, lineups, boxScore, schedule }, { merge: true })
+      .catch(err => {
+        console.error('寫入雲端失敗：', err);
+        showToast('⚠️ 儲存失敗：權限不足或網路異常');
+      });
+  }
+
+  function saveRoster() { saveAllToFirebase(); }
+  function saveLineup() { saveAllToFirebase(); }
+  function saveSchedule() { saveAllToFirebase(); }
+
+  function openLoginModal() {
+    const dd = document.getElementById('moreMenuDropdown');
+    if (dd) dd.classList.remove('show');
+    const fdd = document.getElementById('floatingMenuDropdown');
+    if (fdd) fdd.classList.remove('show');
+    if (isAdminLoggedIn) {
+      window.__fb.signOut(window.__fb.auth).then(() => showToast('已登出'));
+      return;
+    }
+    document.getElementById('loginModalOverlay').classList.add('show');
+  }
+  function closeLoginModal() { document.getElementById('loginModalOverlay').classList.remove('show'); }
+  function closeLoginModalOnOverlay(e) { if (e.target.id === 'loginModalOverlay') closeLoginModal(); }
+
+  function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    window.__fb.signInWithEmailAndPassword(window.__fb.auth, email, password)
+      .then(() => { closeLoginModal(); showToast('登入成功'); })
+      .catch(() => showToast('登入失敗，請確認帳號密碼'));
+  }
+
+
+  /* ==================================================================
+     🌐 共用區塊 SHARED
+     ================================================================== */
+  const FIELD_POSITIONS = ['P','C','1B','2B','3B','SS','LF','CF','RF','SF'];
+  const POSITIONS = [...FIELD_POSITIONS, 'DH'];
+
+  const FIELD_COORDS = {
+    LF:  { top: 20, left: 15 },
+    CF:  { top: 12, left: 38 },
+    SF:  { top: 12, left: 62 },
+    RF:  { top: 20, left: 85 },
+    SS:  { top: 53.5, left: 34.5 },
+    '2B':{ top: 53.5, left: 65.5 },
+    '3B':{ top: 62, left: 19 },
+    '1B':{ top: 62, left: 81 },
+    P:   { top: 62, left: 50 },
+    C:   { top: 79, left: 50 }
+  };
+
+  function escapeHtml(str) {
+    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function positionOptions(selected, includeNone) {
+    let opts = includeNone ? `<option value="" ${!selected ? 'selected':''}>無</option>` : '';
+    opts += POSITIONS.map(pos => `<option value="${pos}" ${pos === selected ? 'selected' : ''}>${pos}</option>`).join('');
+    return opts;
+  }
+  function makeId() { return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+  function findPlayerById(id) { return roster.find(p => p.id === id); }
+  function fmt3(num) { if (num === null || isNaN(num)) return '—'; return num.toFixed(3).replace(/^0/, ''); }
+  function displayNumber(num) { return (num !== undefined && num !== null && num !== '') ? num : '—'; }
+  function todayStr() { return new Date().toISOString().slice(0,10); }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  let confirmYesHandler = null;
+  function showConfirm(message, onYes) {
+    document.getElementById('confirmMessage').textContent = message;
+    confirmYesHandler = onYes;
+    document.getElementById('confirmOverlay').classList.add('show');
+  }
+  function confirmYes() {
+    const handler = confirmYesHandler;
+    hideConfirm();
+    if (handler) handler();
+  }
+  function confirmNo() { hideConfirm(); }
+  function hideConfirm() {
+    document.getElementById('confirmOverlay').classList.remove('show');
+    confirmYesHandler = null;
+  }
+  function closeConfirmOnOverlay(e) { if (e.target.id === 'confirmOverlay') hideConfirm(); }
+
+  function toggleMoreMenu(e) {
+    e.stopPropagation();
+    document.getElementById('moreMenuDropdown').classList.toggle('show');
+  }
+  function toggleFloatingMenu(e) {
+    e.stopPropagation();
+    document.getElementById('floatingMenuDropdown').classList.toggle('show');
+  }
+  function menuClearPreviousDay() {
+    const dd = document.getElementById('moreMenuDropdown');
+    if (dd) dd.classList.remove('show');
+    const fdd = document.getElementById('floatingMenuDropdown');
+    if (fdd) fdd.classList.remove('show');
+    clearPreviousDayData();
+  }
+  document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('moreMenuDropdown');
+    if (dropdown && dropdown.classList.contains('show') && !dropdown.contains(e.target) && !e.target.closest('.nav-more')) {
+      dropdown.classList.remove('show');
+    }
+    const fdropdown = document.getElementById('floatingMenuDropdown');
+    if (fdropdown && fdropdown.classList.contains('show') && !fdropdown.contains(e.target) && !e.target.closest('#floatingMenuFab')) {
+      fdropdown.classList.remove('show');
+    }
+  });
+
+  function selectMainPage(page) {
+    switchMainPage(page);
+    const dd = document.getElementById('moreMenuDropdown');
+    if (dd) dd.classList.remove('show');
+    const fdd = document.getElementById('floatingMenuDropdown');
+    if (fdd) fdd.classList.remove('show');
+  }
+
+  function switchMainPage(page) {
+    document.getElementById('pageNews').classList.toggle('active', page === 'news');
+    document.getElementById('pageRoster').classList.toggle('active', page === 'roster');
+    document.getElementById('pageLineup').classList.toggle('active', page === 'lineup');
+    document.getElementById('pageScore').classList.toggle('active', page === 'score');
+    document.getElementById('pageSchedule').classList.toggle('active', page === 'schedule');
+
+    document.querySelectorAll('.nav-link').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.page === page);
+    });
+    document.querySelectorAll('#floatingMenuDropdown .main-menu-item[data-page]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.page === page);
+    });
+
+    const fab = document.getElementById('floatingMenuFab');
+    if (fab) fab.style.display = (page === 'news') ? 'none' : 'flex';
+
+    if (page === 'news') {
+      renderNewsSchedulePreview();
+      loadMLBScores();
+    }
+  }
+
+
+  /* ==================================================================
+     🟦 SECTION 1：球員資料 JS
+     ================================================================== */
+  let currentModalPlayerId = null;
+
+  function computeStats(player) {
+    const records = player.records || [];
+    let singles=0, doubles=0, triples=0, hr=0, bb=0, fc=0, errors=0, outs=0;
+    records.forEach(r => {
+      singles += r.singles||0; doubles += r.doubles||0; triples += r.triples||0;
+      hr += r.hr||0; bb += r.bb||0; fc += r.fc||0; errors += r.errors||0; outs += r.outs||0;
+    });
+    const hits = singles+doubles+triples+hr;
+    const ab = hits+outs+fc+errors;
+    const totalBases = singles*1+doubles*2+triples*3+hr*4;
+    const avg = ab>0 ? hits/ab : null;
+    const obp = (ab+bb)>0 ? (hits+bb)/(ab+bb) : null;
+    const slg = ab>0 ? totalBases/ab : null;
+    return { games: records.length, singles,doubles,triples,hr,bb,fc,errors,outs,hits,ab,totalBases,avg,obp,slg };
+  }
+
+  function renderRoster() {
+    const container = document.getElementById('rosterList');
+    const emptyMsg = document.getElementById('rosterEmptyMsg');
+    const keyword = (document.getElementById('rosterSearch').value || '').trim().toLowerCase();
+    container.innerHTML = '';
+
+    let filtered = roster.filter(p =>
+      !keyword ||
+      p.name.toLowerCase().includes(keyword) ||
+      (p.number && String(p.number).toLowerCase().includes(keyword))
+    );
+
+    if (rosterSort === 'name') {
+      filtered.sort((a, b) => (a.name || '').localeCompare((b.name || ''), ['zh-Hant', 'en'], { sensitivity: 'base', numeric: true }));
+    }
+    emptyMsg.style.display = roster.length ? 'none' : 'block';
+
+    const nameBtn = document.getElementById('rosterSortNameBtn');
+    const customBtn = document.getElementById('rosterSortCustomBtn');
+    if (nameBtn && customBtn) {
+      nameBtn.className = rosterSort === 'name' ? 'btn-add' : 'btn-muted';
+      customBtn.className = rosterSort === 'custom' ? 'btn-add' : 'btn-muted';
+    }
+
+    const currentLineup = getLineup();
+
+    filtered.forEach(p => {
+      const s = computeStats(p);
+      const statText = `${fmt3(s.avg)}/${fmt3(s.obp)}/${fmt3(s.slg)}`;
+      const inLineup = currentLineup.some(e => e.id === p.id);
+      const posLine = p.primary
+        ? `<span class="primary-tag">主:${p.primary}</span>${p.secondary ? ' <span class="secondary-tag">副:'+p.secondary+'</span>' : ''}`
+        : `<span class="secondary-tag">尚未設定守備位置</span>`;
+      const li = document.createElement('li');
+      li.className = 'roster-row';
+      li.dataset.playerId = p.id;
+      li.innerHTML = `
+        <div class="roster-handle" data-player-id="${p.id}">⠿</div>
+        <div class="roster-number ${p.number ? '' : 'empty'}">${displayNumber(p.number)}</div>
+        <div class="roster-main">
+          <button class="roster-name-btn" onclick="openModal('${p.id}')">${escapeHtml(p.name)}</button>
+          <div class="roster-pos-line">${posLine}</div>
+        </div>
+        ${inLineup ? `<span class="roster-badge">在第${activeGame === 1 ? '一' : '二'}場打序中</span>` : ''}
+        <div class="roster-stats">${statText}</div>
+        <button class="roster-trash" onclick="deleteFromRoster('${p.id}')">🗑</button>
+      `;
+      container.appendChild(li);
+    });
+
+    attachRosterDragHandlers();
+  }
+
+  function setRosterSort(mode) {
+    rosterSort = mode === 'name' ? 'name' : 'custom';
+    saveRoster();
+    renderRoster();
+  }
+
+  function addPlayerToRoster() {
+    const nameInput = document.getElementById('nameInput');
+    const numberInput = document.getElementById('numberInput');
+    const name = nameInput.value.trim();
+    const number = numberInput.value.trim();
+    if (!name) return;
+    roster.push({ id: makeId(), name, number, primary: '', secondary: '', records: [] });
+    nameInput.value = '';
+    numberInput.value = '';
+    saveRoster(); renderRoster();
+    showToast('已加入球員名單');
+  }
+
+  function deleteFromRoster(id) {
+    const p = findPlayerById(id);
+    if (!p) return;
+    showConfirm(`確定要從名單中永久刪除「${p.name}」嗎？此動作將刪除其所有歷史打擊紀錄，且無法復原。`, () => {
+      roster = roster.filter(x => x.id !== id);
+      lineups.game1 = lineups.game1.filter(e => e.id !== id);
+      lineups.game2 = lineups.game2.filter(e => e.id !== id);
+      saveRoster(); saveLineup(); render();
+      showToast('已從名單刪除');
+    });
+  }
+
+  function openModal(id) {
+    currentModalPlayerId = id;
+    const p = findPlayerById(id);
+    if (!p) return;
+    document.getElementById('modalNumberInput').value = p.number || '';
+    document.getElementById('modalNameInput').value = p.name;
+    document.getElementById('primaryPosSelect').innerHTML = positionOptions(p.primary, true);
+    document.getElementById('secondaryPosSelect').innerHTML = positionOptions(p.secondary, true);
+    document.getElementById('recordDate').value = todayStr();
+    ['rec1B','rec2B','rec3B','recHR','recBB','recE','recFC','recOuts'].forEach(id2 => document.getElementById(id2).value = 0);
+    renderModalSummary(p);
+    renderRecordList(p);
+    document.getElementById('modalOverlay').classList.add('show');
+  }
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('show');
+    currentModalPlayerId = null;
+    render();
+  }
+  function closeModalOnOverlay(e) { if (e.target.id === 'modalOverlay') closeModal(); }
+  function updateModalName(value) { const p = findPlayerById(currentModalPlayerId); if (!p) return; p.name = value; saveRoster(); }
+  function updateModalNumber(value) { const p = findPlayerById(currentModalPlayerId); if (!p) return; p.number = value.trim(); saveRoster(); }
+  function updateModalPrimary(value) { const p = findPlayerById(currentModalPlayerId); if (!p) return; p.primary = value; saveRoster(); }
+  function updateModalSecondary(value) { const p = findPlayerById(currentModalPlayerId); if (!p) return; p.secondary = value; saveRoster(); }
+
+  function renderModalSummary(p) {
+    const s = computeStats(p);
+    document.getElementById('modalSummary').innerHTML = `
+      打擊率 <b>${fmt3(s.avg)}</b> 上壘率 <b>${fmt3(s.obp)}</b> 長打率 <b>${fmt3(s.slg)}</b><br>
+      安打:${s.hits}(1B ${s.singles}/2B ${s.doubles}/3B ${s.triples}/HR ${s.hr}) BB:${s.bb} 失誤:${s.errors} 野選:${s.fc} 出局:${s.outs} 打數:${s.ab}
+    `;
+  }
+  function renderRecordList(p) {
+    const container = document.getElementById('recordList');
+    const records = [...(p.records || [])].sort((a,b) => b.date.localeCompare(a.date));
+    if (records.length === 0) { container.innerHTML = '<p style="color:#8e8e93;font-size:13px;">尚無紀錄</p>'; return; }
+    container.innerHTML = records.map(r => {
+      const realIndex = p.records.indexOf(r);
+      return `
+        <div class="record-item">
+          <div>
+            <div>${r.date}</div>
+            <div style="color:#636366;margin-top:2px;">1B${r.singles} 2B${r.doubles} 3B${r.triples} HR${r.hr} BB${r.bb} E${r.errors||0} FC${r.fc||0} Out${r.outs}</div>
+          </div>
+          <button class="rec-del" onclick="deleteRecord('${realIndex}')">✕</button>
+        </div>`;
+    }).join('');
+  }
+
+  function saveRecord() {
+    const p = findPlayerById(currentModalPlayerId);
+    if (!p) return;
+    const date = document.getElementById('recordDate').value;
+    if (!date) { showToast('請選擇日期'); return; }
+
+    const input1B = Number(document.getElementById('rec1B').value) || 0;
+    const input2B = Number(document.getElementById('rec2B').value) || 0;
+    const input3B = Number(document.getElementById('rec3B').value) || 0;
+    const inputHR = Number(document.getElementById('recHR').value) || 0;
+    const inputBB = Number(document.getElementById('recBB').value) || 0;
+    const inputE  = Number(document.getElementById('recE').value) || 0;
+    const inputFC = Number(document.getElementById('recFC').value) || 0;
+    const inputOuts = Number(document.getElementById('recOuts').value) || 0;
+
+    if (!p.records) p.records = [];
+    const existingIndex = p.records.findIndex(r => r.date === date);
+
+    if (existingIndex >= 0) {
+      p.records[existingIndex].singles += input1B;
+      p.records[existingIndex].doubles += input2B;
+      p.records[existingIndex].triples += input3B;
+      p.records[existingIndex].hr += inputHR;
+      p.records[existingIndex].bb += inputBB;
+      p.records[existingIndex].errors = (p.records[existingIndex].errors||0) + inputE;
+      p.records[existingIndex].fc = (p.records[existingIndex].fc||0) + inputFC;
+      p.records[existingIndex].outs += inputOuts;
+      showToast('同日紀錄已成功累加');
+    } else {
+      p.records.push({
+        date,
+        singles: input1B, doubles: input2B, triples: input3B, hr: inputHR,
+        bb: inputBB, errors: inputE, fc: inputFC, outs: inputOuts,
+        boxContribution: { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0 }
+      });
+      showToast('紀錄已新增');
+    }
+
+    saveRoster();
+    renderModalSummary(p);
+    renderRecordList(p);
+
+    ['rec1B','rec2B','rec3B','recHR','recBB','recE','recFC','recOuts'].forEach(id => document.getElementById(id).value = 0);
+  }
+
+  function deleteRecord(index) {
+    const p = findPlayerById(currentModalPlayerId);
+    if (!p) return;
+    p.records.splice(Number(index), 1);
+    saveRoster();
+    renderModalSummary(p);
+    renderRecordList(p);
+  }
+
+
+  /* ==================================================================
+     🟩 SECTION 2：Line UP JS
+     ================================================================== */
+  let activeGame = 1;
+
+  function getLineup() { return activeGame === 1 ? lineups.game1 : lineups.game2; }
+  function setLineup(arr) { if (activeGame === 1) lineups.game1 = arr; else lineups.game2 = arr; }
+  function findLineupEntry(id) { return getLineup().find(e => e.id === id); }
+  function effectivePosOf(entry, player) { return entry.pos || player.primary || ''; }
+
+  function switchGame(gameNum) {
+    activeGame = gameNum;
+    document.getElementById('tabGame1').classList.toggle('active', gameNum === 1);
+    document.getElementById('tabGame2').classList.toggle('active', gameNum === 2);
+    render();
+  }
+
+  function copyGame1ToGame2() {
+    showConfirm('確定要把「第一場打序」完整複製並覆蓋到「第二場打序」嗎？此動作會覆蓋第二場目前的打序內容。', () => {
+      lineups.game2 = JSON.parse(JSON.stringify(lineups.game1));
+      saveLineup();
+      showToast('已成功複製第一場打序至第二場');
+      if (activeGame === 2) render();
+    });
+  }
+
+  function clearPreviousDayData() {
+    showConfirm('確定要清空「前一日」的打序（第一場+第二場）與紀錄器逐打席紀錄嗎？球員資料中的歷史打擊紀錄不會被刪除，僅重置打序表與紀錄器顯示，方便建立新的一天。', () => {
+      lineups = { game1: [], game2: [] };
+      boxScore = {};
+      isBoxDirty = false;
+      updateBoxSaveIndicator();
+      saveLineup();
+      saveAllToFirebase();
+      render();
+      showToast('已清空前一日打序（第一場+第二場）與逐打席紀錄');
+    });
+  }
+
+  function render() {
+    const list = document.getElementById('lineupList');
+    const emptyMsg = document.getElementById('lineupEmptyMsg');
+    list.innerHTML = '';
+
+    let currentLineup = getLineup();
+    const validEntries = currentLineup.filter(e => findPlayerById(e.id));
+    if (validEntries.length !== currentLineup.length) {
+      setLineup(validEntries);
+      saveLineup();
+      currentLineup = validEntries;
+    }
+
+    emptyMsg.style.display = currentLineup.length ? 'none' : 'block';
+
+    currentLineup.forEach((entry, i) => {
+      const p = findPlayerById(entry.id);
+      const s = computeStats(p);
+      const statText = `${fmt3(s.avg)}/${fmt3(s.obp)}/${fmt3(s.slg)}`;
+      const isOverride = !!entry.pos && entry.pos !== p.primary;
+
+      const li = document.createElement('li');
+      li.className = 'player-row' + (isOverride ? ' overridden' : '');
+      li.dataset.index = i;
+      li.innerHTML = `
+        <div class="drag-handle" data-index="${i}">☰</div>
+        <div class="move-buttons">
+          <button class="mv-btn" onclick="moveUp(${i})" ${i===0?'disabled':''}>▲</button>
+          <button class="mv-btn" onclick="moveDown(${i})" ${i===currentLineup.length-1?'disabled':''}>▼</button>
+        </div>
+        <div class="order-num">${i + 1}</div>
+        <div class="number-badge ${p.number ? '' : 'empty'}">${displayNumber(p.number)}</div>
+        <button class="name-btn" onclick="openModal('${p.id}')">${escapeHtml(p.name)}</button>
+        <div class="stats-text">${statText}</div>
+        <select class="position-select ${isOverride?'is-override':''}" onchange="updateLineupPos('${p.id}', this.value)">
+          <option value="" ${!entry.pos ? 'selected':''}>${p.primary ? '主:'+p.primary : '未設定'}</option>
+          ${positionOptions(entry.pos, false)}
+        </select>
+        <button class="del-btn" onclick="removeFromLineup('${p.id}')">✕</button>
+      `;
+      list.appendChild(li);
+    });
+
+    attachReorderDragHandlers();
+    renderField();
+    renderRoster();
+    renderBSO();
+    renderBoxScore();
+  }
+
+  function updateLineupPos(id, value) {
+    const entry = findLineupEntry(id);
+    if (!entry) return;
+    entry.pos = value || null;
+    saveLineup();
+    render();
+  }
+
+  function moveUp(i) {
+    let currentLineup = getLineup();
+    if (i===0) return;
+    [currentLineup[i-1], currentLineup[i]] = [currentLineup[i], currentLineup[i-1]];
+    saveLineup(); render();
+  }
+  function moveDown(i) {
+    let currentLineup = getLineup();
+    if (i===currentLineup.length-1) return;
+    [currentLineup[i+1], currentLineup[i]] = [currentLineup[i], currentLineup[i+1]];
+    saveLineup(); render();
+  }
+
+  function removeFromLineup(id) {
+    setLineup(getLineup().filter(e => e.id !== id));
+    saveLineup(); render();
+    showToast('已移出打序（名單資料保留）');
+  }
+
+  function renderField() {
+    const diagram = document.getElementById('fieldDiagram');
+    diagram.querySelectorAll('.field-slot').forEach(el => el.remove());
+
+    const grouped = {};
+    FIELD_POSITIONS.forEach(pos => grouped[pos] = []);
+    const bench = [];
+
+    getLineup().forEach(entry => {
+      const p = findPlayerById(entry.id);
+      if (!p) return;
+      const pos = effectivePosOf(entry, p);
+      if (pos && grouped[pos]) grouped[pos].push(p);
+      else bench.push({ player: p, pos });
+    });
+
+    function chipLabel(p) {
+      return p.number ? `#${escapeHtml(String(p.number))} ${escapeHtml(p.name)}` : escapeHtml(p.name);
+    }
+
+    FIELD_POSITIONS.forEach(pos => {
+      const coord = FIELD_COORDS[pos];
+      const slot = document.createElement('div');
+      slot.className = 'field-slot';
+      slot.dataset.pos = pos;
+      slot.style.top = coord.top + '%';
+      slot.style.left = coord.left + '%';
+
+      const occupants = grouped[pos];
+      const chipsHtml = occupants.map(p =>
+        `<div class="player-chip ${occupants.length>1?'conflict':''}" data-player-id="${p.id}" data-source-pos="${pos}">${chipLabel(p)}</div>`
+      ).join('');
+
+      slot.innerHTML = `
+        <div class="slot-circle"></div>
+        <div class="slot-chips">${chipsHtml}</div>
+      `;
+      diagram.appendChild(slot);
+    });
+
+    const benchStrip = document.getElementById('benchStrip');
+    const benchEmpty = document.getElementById('benchEmpty');
+    benchStrip.querySelectorAll('.player-chip').forEach(el => el.remove());
+    benchEmpty.style.display = bench.length ? 'none' : 'inline';
+    bench.forEach(item => {
+      const p = item.player;
+      const isDH = item.pos === 'DH';
+      const chip = document.createElement('div');
+      chip.className = 'player-chip' + (isDH ? ' dh-chip' : '');
+      chip.dataset.playerId = p.id;
+      chip.dataset.sourcePos = item.pos || '';
+      chip.innerHTML = chipLabel(p) + (isDH ? '（DH）' : '');
+      benchStrip.appendChild(chip);
+    });
+
+    attachFieldDragHandlers();
+  }
+
+  function buildOrderText() {
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}/${today.getMonth()+1}/${today.getDate()}`;
+    const gameName = activeGame === 1 ? '第一場' : '第二場';
+    let text = `AIT棒次表 - ${gameName} (${dateStr})\n------------------------\n`;
+    getLineup().forEach((entry, i) => {
+      const p = findPlayerById(entry.id);
+      if (!p) return;
+      const effectivePos = entry.pos || p.primary || '-';
+      const numPart = p.number ? `#${p.number} ` : '';
+      text += `${i+1}. ${numPart}${p.name} ${effectivePos}\n`;
+    });
+    return text;
+  }
+  function shareOrder() {
+    const text = buildOrderText();
+    if (navigator.share) { navigator.share({ title: '壘球隊棒次表', text }).catch(() => {}); }
+    else { copyOrder(); }
+  }
+  function copyOrder() {
+    const text = buildOrderText();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => showToast('已複製打序到剪貼簿')).catch(() => showCopyModal(text));
+    } else { showCopyModal(text); }
+  }
+  function showCopyModal(text) { document.getElementById('copyTextArea').value = text; document.getElementById('copyModalOverlay').classList.add('show'); }
+  function hideCopyModal() { document.getElementById('copyModalOverlay').classList.remove('show'); }
+  function closeCopyModal(e) { if (e.target.id === 'copyModalOverlay') hideCopyModal(); }
+  function tryExecCopy() {
+    const ta = document.getElementById('copyTextArea');
+    ta.focus(); ta.select();
+    try { const ok = document.execCommand('copy'); if (ok) { showToast('已複製'); hideCopyModal(); } } catch(e){}
+  }
+
+  let isDragging=false, longPressTimer=null, dragStartY=0, dragIndex=null,
+      placeholderIndex=null, itemHeight=0, draggedLi=null, allLis=[];
+
+  function attachReorderDragHandlers() {
+    document.querySelectorAll('#lineupList .drag-handle').forEach(handle => {
+      handle.addEventListener('touchstart', onReorderTouchStart, { passive: false });
+    });
+  }
+  function onReorderTouchStart(e) {
+    const handle = e.currentTarget;
+    const li = handle.closest('.player-row');
+    const index = parseInt(handle.dataset.index);
+    const touch = e.touches[0];
+    const startY = touch.clientY;
+    clearTimeout(longPressTimer);
+    longPressTimer = setTimeout(() => { startReorderDrag(li, index, startY); }, 300);
+    const moveHandler = (ev) => {
+      const t = ev.touches[0];
+      if (!isDragging) { if (Math.abs(t.clientY - startY) > 10) { clearTimeout(longPressTimer); cleanup(); } return; }
+      ev.preventDefault();
+      onReorderDragMove(t.clientY);
+    };
+    const endHandler = () => { clearTimeout(longPressTimer); if (isDragging) onReorderDragEnd(); cleanup(); };
+    function cleanup() {
+      document.removeEventListener('touchmove', moveHandler);
+      document.removeEventListener('touchend', endHandler);
+      document.removeEventListener('touchcancel', endHandler);
+    }
+    document.addEventListener('touchmove', moveHandler, { passive: false });
+    document.addEventListener('touchend', endHandler);
+    document.addEventListener('touchcancel', endHandler);
+  }
+  function startReorderDrag(li, index, clientY) {
+    isDragging = true; draggedLi = li; dragIndex = index; placeholderIndex = index;
+    itemHeight = li.offsetHeight + 6; dragStartY = clientY;
+    allLis = Array.from(document.querySelectorAll('#lineupList .player-row'));
+    li.classList.add('dragging'); li.style.position = 'relative'; li.style.zIndex = 999;
+    if (navigator.vibrate) navigator.vibrate(15);
+  }
+  function onReorderDragMove(clientY) {
+    const currentLineup = getLineup();
+    const deltaY = clientY - dragStartY;
+    draggedLi.style.transform = `translateY(${deltaY}px)`;
+    const shift = Math.round(deltaY / itemHeight);
+    const newIndex = Math.min(Math.max(dragIndex + shift, 0), currentLineup.length - 1);
+    if (newIndex !== placeholderIndex) {
+      allLis.forEach((sibLi, i) => {
+        if (i === dragIndex) return;
+        let offset = 0;
+        if (dragIndex < newIndex) { if (i > dragIndex && i <= newIndex) offset = -itemHeight; }
+        else if (dragIndex > newIndex) { if (i >= newIndex && i < dragIndex) offset = itemHeight; }
+        sibLi.style.transition = 'transform 0.15s';
+        sibLi.style.transform = `translateY(${offset}px)`;
+      });
+      placeholderIndex = newIndex;
+    }
+  }
+  function onReorderDragEnd() {
+    isDragging = false;
+    draggedLi.classList.remove('dragging');
+    draggedLi.style.transform=''; draggedLi.style.position=''; draggedLi.style.zIndex='';
+    allLis.forEach(li => { li.style.transform=''; li.style.transition=''; });
+    if (placeholderIndex !== dragIndex) {
+      const currentLineup = getLineup();
+      const [moved] = currentLineup.splice(dragIndex, 1);
+      currentLineup.splice(placeholderIndex, 0, moved);
+      saveLineup();
+    }
+    render();
+  }
+
+  function attachRosterDragHandlers() {
+    document.querySelectorAll('.roster-handle').forEach(handle => {
+      handle.addEventListener('click', () => {
+        quickAddToEnd(handle.dataset.playerId);
+      });
+    });
+  }
+  function quickAddToEnd(playerId) {
+    let currentLineup = getLineup();
+    if (currentLineup.some(e => e.id === playerId)) {
+      showToast(`已在第${activeGame === 1 ? '一' : '二'}場打序中，可到 Line UP 分頁長按拖曳調整位置`);
+      return;
+    }
+    currentLineup.push({ id: playerId, pos: null });
+    saveLineup();
+    render();
+    showToast(`已加入第${activeGame === 1 ? '一' : '二'}場打序尾端`);
+  }
+
+  let fieldDragActive = false, fieldDragPlayerId = null, fieldDragMoved = false;
+  let fieldStartX = 0, fieldStartY = 0;
+  let fieldTargetPos = null;
+
+  function attachFieldDragHandlers() {
+    document.querySelectorAll('.field-diagram .player-chip, .bench-strip .player-chip').forEach(chip => {
+      chip.addEventListener('touchstart', onFieldChipTouchStart, { passive: false });
+    });
+  }
+  function onFieldChipTouchStart(e) {
+    const chip = e.currentTarget;
+    const playerId = chip.dataset.playerId;
+    const touch = e.touches[0];
+    fieldStartX = touch.clientX; fieldStartY = touch.clientY;
+    fieldDragPlayerId = playerId; fieldDragMoved = false; fieldDragActive = false; fieldTargetPos = null;
+
+    const moveHandler = (ev) => {
+      const t = ev.touches[0];
+      const dist = Math.hypot(t.clientX - fieldStartX, t.clientY - fieldStartY);
+      if (!fieldDragActive && dist > 8) {
+        fieldDragActive = true; fieldDragMoved = true;
+        chip.classList.add('dragging-source');
+        showFieldGhost(findPlayerById(playerId)?.name || '');
+      }
+      if (fieldDragActive) {
+        ev.preventDefault();
+        moveFieldGhost(t.clientX, t.clientY);
+        updateFieldHighlight(t.clientX, t.clientY);
+      }
+    };
+    const endHandler = () => {
+      document.removeEventListener('touchmove', moveHandler);
+      document.removeEventListener('touchend', endHandler);
+      document.removeEventListener('touchcancel', endHandler);
+      hideFieldGhost();
+      clearFieldHighlight();
+      chip.classList.remove('dragging-source');
+
+      if (fieldDragMoved && fieldTargetPos) {
+        applyFieldAssignment(fieldDragPlayerId, fieldTargetPos);
+      }
+      fieldDragActive = false; fieldDragPlayerId = null; fieldTargetPos = null;
+    };
+    document.addEventListener('touchmove', moveHandler, { passive: false });
+    document.addEventListener('touchend', endHandler);
+    document.addEventListener('touchcancel', endHandler);
+  }
+  function showFieldGhost(name) {
+    const g = document.getElementById('fieldGhost');
+    g.textContent = name; g.style.display = 'block';
+  }
+  function moveFieldGhost(x, y) {
+    const g = document.getElementById('fieldGhost');
+    g.style.left = (x - 10) + 'px'; g.style.top = (y - 36) + 'px';
+  }
+  function hideFieldGhost() { document.getElementById('fieldGhost').style.display = 'none'; }
+
+  function updateFieldHighlight(x, y) {
+    clearFieldHighlight();
+    const THRESHOLD = 46;
+    let bestPos = null, bestDist = Infinity;
+    document.querySelectorAll('.field-slot').forEach(slot => {
+      const r = slot.getBoundingClientRect();
+      const cx = r.left + r.width/2, cy = r.top + r.height/2 - 10;
+      const d = Math.hypot(x - cx, y - cy);
+      if (d < bestDist) { bestDist = d; bestPos = slot; }
+    });
+    if (bestPos && bestDist < THRESHOLD) {
+      bestPos.classList.add('slot-highlight');
+      fieldTargetPos = bestPos.dataset.pos;
+      return;
+    }
+    const bench = document.getElementById('benchStrip');
+    const br = bench.getBoundingClientRect();
+    if (x >= br.left && x <= br.right && y >= br.top - 10 && y <= br.bottom + 10) {
+      bench.classList.add('slot-highlight');
+      fieldTargetPos = 'BENCH';
+      return;
+    }
+    fieldTargetPos = null;
+  }
+  function clearFieldHighlight() {
+    document.querySelectorAll('.field-slot.slot-highlight').forEach(el => el.classList.remove('slot-highlight'));
+    document.getElementById('benchStrip').classList.remove('slot-highlight');
+  }
+
+  function applyFieldAssignment(playerId, targetPos) {
+    const entry = findLineupEntry(playerId);
+    if (!entry) return;
+    if (targetPos === 'BENCH') {
+      entry.pos = null;
+      saveLineup(); render();
+      showToast('已恢復預設守備（或設為未分配）');
+    } else {
+      entry.pos = targetPos;
+      saveLineup(); render();
+      showToast(`已指派至新守備位置`);
+    }
+  }
+
+  function cleanLineForName(line) {
+    let s = (line || '').trim();
+    if (!s) return '';
+    s = s.replace(/\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}/g, '');
+    s = s.replace(/\d{1,2}:\d{2}(:\d{2})?\s*(AM|PM|am|pm)?/g, '');
+    s = s.replace(/[\[\]【】()（）]/g, ' ');
+    s = s.replace(/^\s*[\d一二三四五六七八九十]+[\.\、\)\-：:]\s*/, '');
+    s = s.replace(/^[-•*·]\s*/, '');
+    s = s.replace(/\t+/g, ' ').replace(/\s+/g, ' ').trim();
+    return s;
+  }
+
+  function findRosterMatch(candidate) {
+    if (!candidate) return null;
+    const norm = candidate.toLowerCase();
+
+    let found = roster.find(p => p.name.toLowerCase() === norm);
+    if (found) return found;
+
+    const numMatch = candidate.match(/^#?(\d{1,3})\s*號?$/);
+    if (numMatch) {
+      found = roster.find(p => String(p.number) === numMatch[1]);
+      if (found) return found;
+    }
+
+    const nameOnly = candidate.replace(/#?\d{1,3}\s*號?/g, '').trim().toLowerCase();
+    if (nameOnly) {
+      found = roster.find(p => p.name.toLowerCase() === nameOnly);
+      if (found) return found;
+    }
+
+    found = roster.find(p => norm.includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(norm));
+    return found || null;
+  }
+
+  function parseLineImport() {
+    const raw = document.getElementById('lineImportInput').value;
+    if (!raw || !raw.trim()) { showToast('請先貼上 LINE 內容'); return; }
+
+    const lines = raw.split('\n');
+    const currentIds = new Set(lineups.game1.map(e => e.id));
+    const seenThisPaste = new Set();
+
+    const toAddIds = [];
+    const toAddNames = [];
+    const skippedExisting = [];
+    const unmatched = [];
+
+    lines.forEach(line => {
+      const cleaned = cleanLineForName(line);
+      if (!cleaned) return;
+      if (cleaned.length > 14) return;
+
+      const p = findRosterMatch(cleaned);
+      if (p) {
+        if (seenThisPaste.has(p.id)) return;
+        seenThisPaste.add(p.id);
+
+        if (currentIds.has(p.id)) {
+          skippedExisting.push(p.name);
+          return;
+        }
+        toAddIds.push(p.id);
+        toAddNames.push(p.name);
+      } else {
+        unmatched.push(cleaned);
+      }
+    });
+
+    if (toAddIds.length === 0 && unmatched.length === 0 && skippedExisting.length === 0) {
+      showToast('未能從內容中解析出任何有效資料，請確認格式');
+      return;
+    }
+
+    if (toAddIds.length > 0) {
+      showConfirm(`即將新增 ${toAddIds.length} 位球員至「第一場」打序尾端（不影響原有打序），確定要繼續嗎？`, () => {
+        lineups.game1 = [...lineups.game1, ...toAddIds.map(id => ({ id, pos: null }))];
+        saveLineup();
+        switchGame(1);
+        switchMainPage('lineup');
+        renderLineImportResult(toAddNames, unmatched, skippedExisting);
+        showToast(`已新增 ${toAddIds.length} 位球員至第一場打序尾端`);
+      });
+    } else {
+      renderLineImportResult(toAddNames, unmatched, skippedExisting);
+    }
+  }
+
+  function renderLineImportResult(addedNames, unmatched, skippedExisting) {
+    const box = document.getElementById('lineImportResult');
+    box.innerHTML = '';
+
+    if (addedNames.length) {
+      const okDiv = document.createElement('div');
+      okDiv.className = 'import-result-ok';
+      okDiv.innerHTML = `✅ 已新增至第一場打序尾端（共 ${addedNames.length} 位）：${addedNames.map(escapeHtml).join('、')}`;
+      box.appendChild(okDiv);
+    }
+
+    if (skippedExisting.length) {
+      const skipDiv = document.createElement('div');
+      skipDiv.className = 'import-result-skip';
+      skipDiv.innerHTML = `ℹ️ 以下球員已在第一場打序中，未重複加入：${skippedExisting.map(escapeHtml).join('、')}`;
+      box.appendChild(skipDiv);
+    }
+
+    if (unmatched.length) {
+      const warnDiv = document.createElement('div');
+      warnDiv.className = 'import-result-warn';
+      warnDiv.innerHTML = `⚠️ 以下內容在球員名單中找不到對應資料，請先新增至系統再重新匯入：`;
+      const listWrap = document.createElement('div');
+      listWrap.style.marginTop = '6px';
+      unmatched.forEach(name => {
+        const row = document.createElement('div');
+        row.className = 'unmatched-row';
+        const span = document.createElement('span');
+        span.textContent = '・' + name;
+        const btn = document.createElement('button');
+        btn.className = 'btn-muted';
+        btn.textContent = '前往新增';
+        btn.onclick = () => goAddRosterFromImport(name);
+        row.appendChild(span);
+        row.appendChild(btn);
+        listWrap.appendChild(row);
+      });
+      warnDiv.appendChild(listWrap);
+      box.appendChild(warnDiv);
+    }
+  }
+
+  function goAddRosterFromImport(name) {
+    switchMainPage('roster');
+    const nameInput = document.getElementById('nameInput');
+    nameInput.value = name;
+    nameInput.focus();
+    showToast('請確認姓名並輸入背號後點擊新增');
+  }
+
+
+  /* ==================================================================
+     🟥 SECTION 3：紀錄器 JS
+     ================================================================== */
+  let bsoState = { b: 1, s: 1, o: 0 };
+
+  function renderBSO() {
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById(`b${i}`).className = 'dot' + (i <= bsoState.b ? ' active-b' : '');
+    }
+    for (let i = 1; i <= 2; i++) {
+      document.getElementById(`s${i}`).className = 'dot' + (i <= bsoState.s ? ' active-s' : '');
+    }
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById(`o${i}`).className = 'dot' + (i <= bsoState.o ? ' active-o' : '');
+    }
+  }
+  function addBSO(type) {
+    if (type === 'b') {
+      bsoState.b = bsoState.b >= 3 ? 1 : bsoState.b + 1;
+    } else if (type === 's') {
+      bsoState.s = bsoState.s >= 2 ? 1 : bsoState.s + 1;
+    } else if (type === 'o') {
+      bsoState.o++;
+      if (bsoState.o >= 3) {
+        renderBSO();
+        setTimeout(() => { showToast('3出局，換局！'); fullInningReset(); }, 150);
+        return;
+      }
+    }
+    renderBSO();
+  }
+  // 手動按鈕：僅重置好球(S)與壞球(B)，不影響已計出局數(O)
+  function resetBSO() {
+    bsoState.b = 1;
+    bsoState.s = 1;
+    renderBSO();
+  }
+  // 三出局後自動觸發：好壞球與出局數全部歸零重置
+  function fullInningReset() {
+    bsoState = { b: 1, s: 1, o: 0 };
+    renderBSO();
+  }
+
+  function calcScore() {
+    let topSum = 0;
+    for (let i = 1; i <= 7; i++) { topSum += parseInt(document.getElementById(`top_${i}`).value) || 0; }
+    document.getElementById('top_R').textContent = topSum;
+
+    let botSum = 0;
+    for (let i = 1; i <= 7; i++) { botSum += parseInt(document.getElementById(`bot_${i}`).value) || 0; }
+    document.getElementById('bot_R').textContent = botSum;
+  }
+  function onTeamChange(changedSide) {
+    const topSelect = document.getElementById('teamTop');
+    const botSelect = document.getElementById('teamBottom');
+    if (changedSide === 'top') { botSelect.value = (topSelect.value === '客隊') ? 'AIT' : '客隊'; }
+    else { topSelect.value = (botSelect.value === '客隊') ? 'AIT' : '客隊'; }
+  }
+
+  const RESULT_DEFS = [
+    { code:'1B',  label:'一安',   field:'singles' },
+    { code:'2B',  label:'二安',   field:'doubles' },
+    { code:'3B',  label:'三安',   field:'triples' },
+    { code:'HR',  label:'全壘打', field:'hr' },
+    { code:'BB',  label:'四壞',   field:'bb' },
+    { code:'E',   label:'失誤',   field:'errors' },
+    { code:'FC',  label:'野選',   field:'fc' },
+    { code:'OUT', label:'出局',   field:'outs' },
+  ];
+  const BOX_COLS = 7;
+  let boxGame = 1;
+  let isBoxDirty = false;
+
+  function ensureBoxDate(date) { if (!boxScore[date]) boxScore[date] = { entries: [] }; }
+
+  function updateBoxSaveIndicator() {
+    const el = document.getElementById('boxSaveIndicator');
+    if (el) el.style.display = isBoxDirty ? 'inline' : 'none';
+  }
+
+  function switchBoxGame(gameNum) {
+    boxGame = gameNum;
+    document.getElementById('tabBoxGame1').classList.toggle('active', gameNum === 1);
+    document.getElementById('tabBoxGame2').classList.toggle('active', gameNum === 2);
+    renderBoxScore();
+  }
+
+  function renderBoxScoreHeader() {
+    const thead = document.getElementById('boxScoreHead');
+    let html = '<tr><th class="col-order">打序</th><th class="col-name" style="text-align:left;">球員</th>';
+    for (let col = 1; col <= BOX_COLS; col++) { html += `<th>${col}</th>`; }
+    html += '</tr>';
+    thead.innerHTML = html;
+  }
+
+  function computeColumnOutCounts(date, game) {
+    ensureBoxDate(date);
+    const counts = new Array(BOX_COLS + 1).fill(0);
+    boxScore[date].entries.forEach(e => {
+      if (e.game !== game) return;
+      if (e.code === 'OUT' || e.code === 'FC') {
+        counts[e.col] = (counts[e.col] || 0) + 1;
+      }
+    });
+    return counts;
+  }
+
+  function renderBoxScore() {
+    const date = todayStr();
+    ensureBoxDate(date);
+
+    const tbody = document.getElementById('boxScoreBody');
+    const wrap = document.getElementById('boxScoreTableWrap');
+    const emptyMsg = document.getElementById('boxScoreEmptyMsg');
+    tbody.innerHTML = '';
+
+    const sourceLineup = boxGame === 1 ? lineups.game1 : lineups.game2;
+    const rows = sourceLineup.filter(e => findPlayerById(e.id));
+    const gameLabel = boxGame === 1 ? '第一場' : '第二場';
+
+    if (!rows.length) {
+      wrap.style.display = 'none';
+      emptyMsg.textContent = `目前「${gameLabel}」打序是空的，請先到 Line UP 分頁建立打序`;
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    wrap.style.display = 'block';
+    emptyMsg.style.display = 'none';
+
+    rows.forEach((entry, i) => {
+      const p = findPlayerById(entry.id);
+      let cellsHtml = '';
+      for (let col = 1; col <= BOX_COLS; col++) {
+        const ent = boxScore[date].entries.find(e => e.playerId === p.id && e.col === col && e.game === boxGame);
+        if (ent) {
+          const def = RESULT_DEFS.find(r => r.code === ent.code);
+          cellsHtml += `<td><span class="box-chip res-${ent.code}">${def.label}<span class="box-chip-del" onclick="removeBoxEntry('${ent.id}')">✕</span></span></td>`;
+        } else {
+          cellsHtml += `<td><button class="box-cell-empty-btn" onclick="openBoxPicker('${p.id}', ${col})">＋</button></td>`;
+        }
+      }
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="col-order">${i + 1}</td>
+        <td class="col-name" style="text-align:left;font-weight:600;">${escapeHtml(p.name)}</td>
+        ${cellsHtml}
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const outCounts = computeColumnOutCounts(date, boxGame);
+    let outCellsHtml = '';
+    for (let col = 1; col <= BOX_COLS; col++) {
+      outCellsHtml += `<td>${outCounts[col] || 0}</td>`;
+    }
+    const outRow = document.createElement('tr');
+    outRow.className = 'boxscore-out-row';
+    outRow.innerHTML = `<td class="col-sticky-out" colspan="2" style="text-align:right;">出局數</td>${outCellsHtml}`;
+    tbody.appendChild(outRow);
+  }
+
+  let currentBoxTarget = null;
+  function openBoxPicker(playerId, col) {
+    currentBoxTarget = { playerId, col, game: boxGame };
+    const p = findPlayerById(playerId);
+    const gameLabel = boxGame === 1 ? '第一場' : '第二場';
+    document.getElementById('boxPickerTitle').textContent = `${p ? p.name : ''} · ${gameLabel} · 第 ${col} 打席`;
+    document.getElementById('boxPickerOverlay').classList.add('show');
+  }
+  function closeBoxPicker() {
+    document.getElementById('boxPickerOverlay').classList.remove('show');
+    currentBoxTarget = null;
+  }
+  function closeBoxPickerOnOverlay(e) { if (e.target.id === 'boxPickerOverlay') closeBoxPicker(); }
+
+  // 🔸 僅暫存於本機畫面，不即時同步雲端、不即時更新球員資料，需按 SAVE 才會生效
+  function chooseBoxResult(code) {
+    if (!currentBoxTarget) return;
+    const { playerId, col, game } = currentBoxTarget;
+    const def = RESULT_DEFS.find(r => r.code === code);
+    const date = todayStr();
+    ensureBoxDate(date);
+
+    const exists = boxScore[date].entries.find(e => e.playerId === playerId && e.col === col && e.game === game);
+    if (exists) { showToast('此打席已有紀錄，請先移除再重新記錄'); closeBoxPicker(); return; }
+
+    boxScore[date].entries.push({ id: makeId(), playerId, col, code, game });
+    isBoxDirty = true;
+    updateBoxSaveIndicator();
+
+    closeBoxPicker();
+    renderBoxScore();
+    const p = findPlayerById(playerId);
+    const gameLabel = game === 1 ? '第一場' : '第二場';
+    showToast(`已記錄 ${p ? p.name : ''}（${gameLabel}）第${col}打席：${def.label}（尚未儲存）`);
+  }
+
+  // 🔸 僅移除本機暫存紀錄，需按 SAVE 才會同步至雲端與球員資料
+  function removeBoxEntry(entryId) {
+    const date = todayStr();
+    ensureBoxDate(date);
+    boxScore[date].entries = boxScore[date].entries.filter(e => e.id !== entryId);
+    isBoxDirty = true;
+    updateBoxSaveIndicator();
+    renderBoxScore();
+    showToast('已移除該筆暫存紀錄（尚未儲存）');
+  }
+
+  // 依「今天」box entries，計算每位球員的加總數據
+  function computeBoxTotalsForPlayerDate(playerId, date) {
+    const totals = { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0 };
+    const dayData = boxScore[date];
+    if (!dayData) return totals;
+    dayData.entries.filter(e => e.playerId === playerId).forEach(e => {
+      const def = RESULT_DEFS.find(r => r.code === e.code);
+      if (def) totals[def.field] = (totals[def.field] || 0) + 1;
+    });
+    return totals;
+  }
+
+  // 將逐打席紀錄的統計，正確合併進球員當日紀錄（扣除舊貢獻、加上新貢獻，避免重複累加）
+  function commitBoxScoreToRoster(date) {
+    const dayData = boxScore[date];
+    const involvedPlayerIds = new Set();
+    if (dayData) dayData.entries.forEach(e => involvedPlayerIds.add(e.playerId));
+    roster.forEach(p => {
+      const rec = (p.records || []).find(r => r.date === date);
+      if (rec && rec.boxContribution) involvedPlayerIds.add(p.id);
+    });
+
+    involvedPlayerIds.forEach(playerId => {
+      const p = findPlayerById(playerId);
+      if (!p) return;
+      if (!p.records) p.records = [];
+      let rec = p.records.find(r => r.date === date);
+      const zero = { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0 };
+      const oldContribution = (rec && rec.boxContribution) ? rec.boxContribution : zero;
+      const newContribution = computeBoxTotalsForPlayerDate(playerId, date);
+
+      if (!rec) {
+        rec = { date, singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0, boxContribution: {...zero} };
+        p.records.push(rec);
+      }
+      ['singles','doubles','triples','hr','bb','errors','fc','outs'].forEach(field => {
+        const next = (rec[field] || 0) - (oldContribution[field] || 0) + (newContribution[field] || 0);
+        rec[field] = next < 0 ? 0 : next;
+      });
+      rec.boxContribution = newContribution;
+    });
+  }
+
+  function saveBoxScoreToday() {
+    const date = todayStr();
+    commitBoxScoreToRoster(date);
+    saveAllToFirebase();
+    isBoxDirty = false;
+    updateBoxSaveIndicator();
+    render();
+    showToast('💾 今日逐打席紀錄已儲存，球員資料已同步更新');
+  }
+
+
+  /* ==================================================================
+     🟪 SECTION 4：賽程表 JS
+     ================================================================== */
+  const SCHEDULE_HOURS = ['08','09','10','11','12','13','14','15','16','17'];
+
+  function hourOptionsHtml(selected) {
+    return SCHEDULE_HOURS.map(h => `<option value="${h}" ${h===selected?'selected':''}>${h}</option>`).join('');
+  }
+
+  function getDefaultScheduleMatches() {
+    return [
+      { id: makeId(), date: '2026-09-13', start: '14', end: '16', teamA: 'Snipers', teamB: 'AIT',
+        game1: { scoreA: null, scoreB: null }, game2: { scoreA: null, scoreB: null } },
+      { id: makeId(), date: '2026-09-20', start: '10', end: '12', teamA: '3A BOSS', teamB: 'AIT',
+        game1: { scoreA: null, scoreB: null }, game2: { scoreA: null, scoreB: null } },
+      { id: makeId(), date: '2026-09-27', start: '10', end: '12', teamA: '李明賀', teamB: 'AIT',
+        game1: { scoreA: null, scoreB: null }, game2: { scoreA: null, scoreB: null } },
+      { id: makeId(), date: '2026-10-11', start: '08', end: '10', teamA: 'Talks', teamB: 'AIT',
+        game1: { scoreA: null, scoreB: null }, game2: { scoreA: null, scoreB: null } },
+    ];
+  }
+
+  function findMatchById(id) { return (schedule.matches || []).find(m => m.id === id); }
+  function ensureMatchGames(m) {
+    if (!m.game1) m.game1 = { scoreA: null, scoreB: null };
+    if (!m.game2) m.game2 = { scoreA: null, scoreB: null };
+    m.teamB = 'AIT';
+  }
+
+  function formatDateNoYear(dateStr) {
+    if (!dateStr) return '--/--';
+    const d = new Date(dateStr + 'T00:00:00');
+    if (isNaN(d.getTime())) return '--/--';
+    return `${d.getMonth()+1}/${d.getDate()}`;
+  }
+
+  let scheduleFilterMonth = 'all';
+  function onScheduleMonthFilterChange(value) {
+    scheduleFilterMonth = value;
+    renderSchedule();
+  }
+
+  function buildResultBadge(game) {
+    if (game.scoreA === null || game.scoreA === undefined || game.scoreB === null || game.scoreB === undefined) return '';
+    const oppScore = Number(game.scoreA), ownScore = Number(game.scoreB);
+    let cls = 'tie', label = '平手';
+    if (ownScore > oppScore) { cls = 'win'; label = 'WIN'; }
+    else if (ownScore < oppScore) { cls = 'loss'; label = 'LOSE'; }
+    return `<span class="match-result-badge ${cls}">AIT ${label}</span>`;
+  }
+
+  function renderSchedule() {
+    const container = document.getElementById('scheduleMonthGroups');
+    const emptyMsg = document.getElementById('scheduleEmptyMsg');
+    const filterSelect = document.getElementById('scheduleMonthFilter');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const matches = (schedule.matches || []).slice().sort((a,b) => (a.date+(a.start||'')).localeCompare(b.date+(b.start||'')));
+
+    const groups = {};
+    matches.forEach(m => {
+      const ym = (m.date || '0000-00').slice(0,7);
+      if (!groups[ym]) groups[ym] = [];
+      groups[ym].push(m);
+    });
+    const ymKeys = Object.keys(groups).sort();
+
+    if (filterSelect) {
+      let optHtml = `<option value="all" ${scheduleFilterMonth==='all'?'selected':''}>全部月份</option>`;
+      ymKeys.forEach(ym => {
+        const [y, mo] = ym.split('-');
+        optHtml += `<option value="${ym}" ${scheduleFilterMonth===ym?'selected':''}>${y}年${parseInt(mo,10)}月</option>`;
+      });
+      filterSelect.innerHTML = optHtml;
+    }
+
+    const keysToShow = scheduleFilterMonth === 'all' ? ymKeys : (ymKeys.includes(scheduleFilterMonth) ? [scheduleFilterMonth] : []);
+
+    if (matches.length === 0) {
+      emptyMsg.textContent = '目前尚無賽程資料';
+      emptyMsg.style.display = 'block';
+    } else if (keysToShow.length === 0) {
+      emptyMsg.textContent = '該月份沒有賽程資料';
+      emptyMsg.style.display = 'block';
+    } else {
+      emptyMsg.style.display = 'none';
+    }
+
+    keysToShow.forEach(ym => {
+      const [y, mo] = ym.split('-');
+      const title = document.createElement('div');
+      title.className = 'month-group-title';
+      title.textContent = `${y}年${parseInt(mo,10)}月`;
+      container.appendChild(title);
+
+      groups[ym].forEach(m => {
+        ensureMatchGames(m);
+        const card = document.createElement('div');
+        card.className = 'match-card';
+
+        const g1A = (m.game1.scoreA === null || m.game1.scoreA === undefined) ? '' : m.game1.scoreA;
+        const g1B = (m.game1.scoreB === null || m.game1.scoreB === undefined) ? '' : m.game1.scoreB;
+        const g2A = (m.game2.scoreA === null || m.game2.scoreA === undefined) ? '' : m.game2.scoreA;
+        const g2B = (m.game2.scoreB === null || m.game2.scoreB === undefined) ? '' : m.game2.scoreB;
+
+        card.innerHTML = `
+          <button class="match-delete-btn" onclick="deleteMatch('${m.id}')">✕</button>
+          <div class="match-header-row">
+            <div class="match-date-big">${formatDateNoYear(m.date)}</div>
+            <div class="match-vs-tag">VS</div>
+            <div class="match-score-display">
+              <input type="number" min="0" value="${g1A}" placeholder="對手" onchange="updateMatchField('${m.id}','game1ScoreA',this.value)" />
+              <span>:</span>
+              <input type="number" min="0" value="${g1B}" placeholder="AIT" onchange="updateMatchField('${m.id}','game1ScoreB',this.value)" />
+              ${buildResultBadge(m.game1)}
+            </div>
+          </div>
+          <div class="match-sub-row">
+            <div class="match-time-big">${m.start || '--'}:00</div>
+            <div class="match-team-name-display">${escapeHtml(m.teamA || '對手隊伍')}</div>
+            <div class="match-score-display">
+              <input type="number" min="0" value="${g2A}" placeholder="對手" onchange="updateMatchField('${m.id}','game2ScoreA',this.value)" />
+              <span>:</span>
+              <input type="number" min="0" value="${g2B}" placeholder="AIT" onchange="updateMatchField('${m.id}','game2ScoreB',this.value)" />
+              ${buildResultBadge(m.game2)}
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    });
+
+    renderNewsSchedulePreview();
+  }
+
+  function renderNewsSchedulePreview() {
+    const tbody = document.getElementById('newsScheduleBody');
+    const emptyMsg = document.getElementById('newsScheduleEmptyMsg');
+    if (!tbody) return;
+    const today = todayStr();
+    const upcoming = (schedule.matches || [])
+      .filter(m => m.date >= today)
+      .sort((a,b) => (a.date + (a.start||'')).localeCompare(b.date + (b.start||'')))
+      .slice(0, 5);
+    tbody.innerHTML = '';
+    if (emptyMsg) emptyMsg.style.display = upcoming.length ? 'none' : 'block';
+    upcoming.forEach((m, idx) => {
+      const tr = document.createElement('tr');
+      if (idx === 0) tr.className = 'next-match-highlight'; // 最接近的下一場比賽 highlight
+      tr.innerHTML = `
+        <td>${formatDateNoYear(m.date)}</td>
+        <td>${m.start || '--'}:00</td>
+        <td>AIT vs ${escapeHtml(m.teamA || '對手隊伍')}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function addMatch() {
+    const date = document.getElementById('matchDateInput').value;
+    const start = document.getElementById('matchStartInput').value;
+    const end = document.getElementById('matchEndInput').value;
+    const teamA = document.getElementById('matchTeamAInput').value.trim();
+
+    if (!date || !teamA) {
+      showToast('請至少填寫日期與對手隊伍');
+      return;
+    }
+
+    if (!schedule.matches) schedule.matches = [];
+    schedule.matches.push({
+      id: makeId(), date, start, end,
+      teamA, teamB: 'AIT',
+      game1: { scoreA: null, scoreB: null },
+      game2: { scoreA: null, scoreB: null }
+    });
+    saveSchedule();
+    renderSchedule();
+
+    document.getElementById('matchDateInput').value = '';
+    document.getElementById('matchTeamAInput').value = '';
+    showToast('已新增賽程');
+  }
+
+  function updateMatchField(id, field, value) {
+    const m = findMatchById(id);
+    if (!m) return;
+    ensureMatchGames(m);
+    if (field === 'game1ScoreA') m.game1.scoreA = value === '' ? null : Number(value);
+    else if (field === 'game1ScoreB') m.game1.scoreB = value === '' ? null : Number(value);
+    else if (field === 'game2ScoreA') m.game2.scoreA = value === '' ? null : Number(value);
+    else if (field === 'game2ScoreB') m.game2.scoreB = value === '' ? null : Number(value);
+    saveSchedule();
+    renderSchedule();
+  }
+
+  function deleteMatch(id) {
+    showConfirm('確定要刪除這筆賽程嗎？', () => {
+      schedule.matches = (schedule.matches || []).filter(m => m.id !== id);
+      saveSchedule();
+      renderSchedule();
+      showToast('已刪除賽程');
+    });
+  }
+
+
+  /* ==================================================================
+     ⚾ MLB 即時比分串接
+     ================================================================== */
+  async function loadMLBScores() {
+    const container = document.getElementById('mlb-scores');
+    if (!container) return;
+    container.innerHTML = '載入中...';
+
+    try {
+      // The site is intended for Taiwan users. MLB's "date" is based on the
+      // U.S. calendar, so using Taiwan's calendar date directly can miss
+      // games that were played in the U.S. the previous day.
+      const taipeiNow = new Date();
+      const taipeiParts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Taipei',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).formatToParts(taipeiNow);
+
+      const part = name => taipeiParts.find(p => p.type === name)?.value;
+      const taipeiDate = `${part('year')}-${part('month')}-${part('day')}`;
+
+      // Convert the Taiwan "today" date to a UTC date window. Fetch both
+      // adjacent MLB dates, then keep only games whose actual game time
+      // falls on today's Taiwan calendar date.
+      const base = new Date(`${taipeiDate}T00:00:00+08:00`);
+      const usDates = [];
+      for (let offset = -1; offset <= 1; offset++) {
+        const d = new Date(base);
+        d.setUTCDate(d.getUTCDate() + offset);
+        usDates.push(d.toISOString().slice(0, 10));
+      }
+
+      const responses = await Promise.all(
+        usDates.map(date =>
+          fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${date}&hydrate=team`)
+            .then(res => {
+              if (!res.ok) throw new Error(`MLB API HTTP ${res.status}`);
+              return res.json();
+            })
+        )
+      );
+
+      const allGames = responses.flatMap(data =>
+        (data.dates || []).flatMap(d => d.games || [])
+      );
+
+      // Keep games whose scheduled start time belongs to today's Taiwan date.
+      // This correctly includes, for example, a U.S. evening game that ended
+      // in Taiwan the following morning.
+      const games = allGames.filter(g => {
+        if (!g.gameDate) return false;
+        const parts = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Taipei',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).formatToParts(new Date(g.gameDate));
+        const get = name => parts.find(p => p.type === name)?.value;
+        return `${get('year')}-${get('month')}-${get('day')}` === taipeiDate;
+      });
+
+      // Remove accidental duplicates, then sort by actual game time.
+      const uniqueGames = Array.from(
+        new Map(allGames.filter(g => games.includes(g)).map(g => [g.gamePk, g])).values()
+      );
+      uniqueGames.sort((a, b) => new Date(a.gameDate || 0) - new Date(b.gameDate || 0));
+
+      if (!uniqueGames.length) {
+        container.innerHTML = `<p>${taipeiDate} 今日暫無 MLB 賽事</p>`;
+        return;
+      }
+
+      const gameRows = uniqueGames.map(g => {
+        const away = g.teams?.away || {};
+        const home = g.teams?.home || {};
+        const awayTeam = away.team?.name || 'Away';
+        const homeTeam = home.team?.name || 'Home';
+
+        const awayScore = Number.isFinite(away.score) ? away.score : '-';
+        const homeScore = Number.isFinite(home.score) ? home.score : '-';
+
+        const status = g.status?.detailedState || 'Scheduled';
+        const gameTime = g.gameDate
+          ? new Date(g.gameDate).toLocaleTimeString('zh-TW', {
+              timeZone: 'Asia/Taipei',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            })
+          : '';
+
+        return `
+          <div class="game-row">
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;">
+              <strong style="text-align:left;">${escapeHtml(awayTeam)}</strong>
+              <span style="font-size:16px;font-weight:800;min-width:54px;text-align:center;">${awayScore} : ${homeScore}</span>
+              <strong style="text-align:right;">${escapeHtml(homeTeam)}</strong>
+            </div>
+            <div class="game-status">${gameTime ? gameTime + ' ・ ' : ''}${escapeHtml(status)}</div>
+          </div>`;
+      }).join('');
+
+      container.innerHTML =
+        `<div style="font-size:11px;color:#888;margin-bottom:6px;">
+          ${taipeiDate} ・ 共 ${uniqueGames.length} 場
+          <span style="float:right;">每 1 小時更新</span>
+        </div>` + gameRows;
+
+    } catch (err) {
+      console.error('MLB 資料載入失敗', err);
+      container.innerHTML =
+        '<p>MLB 資料載入失敗，請稍後再試。</p>' +
+        '<button class="btn-muted" onclick="loadMLBScores()">重新載入</button>';
+    }
+  }
+
+  // MLB scores do not need minute-by-minute polling for this page.
+  // Refresh once per hour while the NEWS page is active.
+  setInterval(() => {
+    if (document.getElementById('pageNews')?.classList.contains('active')) {
+      loadMLBScores();
+    }
+  }, 60 * 60 * 1000);
+
+  /* ==================================================================
+     🌐 初始化 INIT
+     ================================================================== */
+  document.getElementById('nameInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') addPlayerToRoster();
+  });
+  document.getElementById('numberInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') addPlayerToRoster();
+  });
+
+  switchMainPage('news');
+
+  function waitForFirebaseAndInit() {
+    if (window.__fbLoaded && window.__fb) {
+      initFirebaseSync();
+    } else {
+      setTimeout(waitForFirebaseAndInit, 100);
+    }
+  }
+  waitForFirebaseAndInit();
+</script>
+
+</body>
+</html>
