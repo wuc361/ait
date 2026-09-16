@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+<link rel="apple-touch-icon" href="/path/to/ait-logo.jpg">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AIT Softball</title>
- <!-- 📱 加入主畫面圖示設定 -->
+
+<!-- 📱 加入主畫面圖示設定 -->
 <link rel="apple-touch-icon" href="ait-logo.jpg">
 <link rel="icon" type="image/jpg" sizes="192x192" href="ait-logo.jpg">
   
@@ -40,136 +42,6 @@
     auth, signInWithEmailAndPassword, signOut, onAuthStateChanged
   };
   window.__fbLoaded = true;
- document.getElementById('btnGenReport').addEventListener('click', () => {
-  const canvas = document.getElementById('reportCanvas');
-  const ctx = canvas.getContext('2d');
-
-  // ==================================================================
-  // 📸 漢堡選單：自動分析戰報與 Canvas 繪圖
-  // ==================================================================
-  document.getElementById('btnGenReport').addEventListener('click', () => {
-    // 關閉漢堡選單下拉畫面（假設您的選單 class 叫 show，點擊後移除它）
-    const menu = document.querySelector('.more-menu-dropdown');
-    if (menu) menu.classList.remove('show');
-
-    // 1. 🔍 自動抓取您網頁上 calcScore() 算出的即時分數與隊名
-    const teamTopEl = document.getElementById('teamTop');
-    const teamBotEl = document.getElementById('teamBottom');
-    const guestName = teamTopEl ? (teamTopEl.value || "AIT SOFTBALL") : "AIT SOFTBALL";
-    const homeName = teamBotEl ? (teamBotEl.value || "OPPONENT") : "OPPONENT";
-    
-    const guestRuns = document.getElementById('top_R')?.textContent || "0";
-    const homeRuns = document.getElementById('bot_R')?.textContent || "0";
-
-    // 2. 🔍 聰明的 MVP 自動搜尋邏輯：從您本機的暫存紀錄 (boxScore) 中抓出今天表現最好的球員
-    let mvpName = "NO MVP";
-    let mvpStats = "No batting records today.";
-    
-    try {
-      const date = todayStr(); // 抓取您程式中的今天日期字串
-      if (boxScore && boxScore[date] && boxScore[date].entries.length > 0) {
-        const playerStats = {};
-        // 統計每位球員今天的打擊數據
-        boxScore[date].entries.forEach(e => {
-          if (e.game !== boxGame) return; // 僅統計當前切換的第 1 或第 2 場
-          if (!playerStats[e.playerId]) {
-            playerStats[e.playerId] = { id: e.playerId, hits: 0, hr: 0, rbi: 0, total: 0 };
-          }
-          playerStats[e.playerId].total++;
-          if (e.code === '1B' || e.code === '2B' || e.code === '3B' || e.code === 'HR') playerStats[e.playerId].hits++;
-          if (e.code === 'HR') playerStats[e.playerId].hr++;
-        });
-
-        // 找出安打最多的球員當 MVP
-        let bestPlayer = null;
-        for (let id in playerStats) {
-          if (!bestPlayer || playerStats[id].hits > bestPlayer.hits) {
-            bestPlayer = playerStats[id];
-          }
-        }
-        if (bestPlayer) {
-          const p = findPlayerById(bestPlayer.id); // 使用您內建的尋找球員函式
-          if (p) {
-            mvpName = p.name.toUpperCase();
-            mvpStats = `HITS: ${bestPlayer.hits} / AT BAT: ${bestPlayer.total} ${bestPlayer.hr > 0 ? `(${bestPlayer.hr} HR)` : ''}`;
-          }
-        }
-      }
-    } catch(err) { console.log("MVP Calc Error:", err); }
-
-    // 3. 🎨 開始用 Canvas 畫高畫質 1200x1200px 戰報
-    const canvas = document.getElementById('reportCanvas');
-    const ctx = canvas.getContext('2d');
-
-    // 背景 (您的品牌深藍色漸層)
-    const gradient = ctx.createLinearGradient(0, 0, 0, 1200);
-    gradient.addColorStop(0, '#005a9c');      // --brand-blue
-    gradient.addColorStop(1, '#012a5e');      // --brand-blue-dark
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 1200, 1200);
-
-    // 頂部與裝飾線 (您的品牌紅色)
-    ctx.fillStyle = '#ef3e42'; // --brand-red
-    ctx.fillRect(0, 0, 1200, 40);
-    ctx.fillRect(0, 175, 1200, 12);
-
-    // 戰報大標題
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 75px Oswald, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('FINAL SCORE REPORT', 600, 130);
-
-    // 比分大框背景
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
-    ctx.fillRect(100, 250, 1000, 440);
-
-    // 填入客隊數據
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 52px Oswald, sans-serif';
-    ctx.fillText(guestName, 350, 360);
-    ctx.font = 'bold 200px Oswald, sans-serif';
-    ctx.fillText(guestRuns, 350, 560);
-    ctx.font = '32px Oswald, sans-serif';
-    ctx.fillStyle = '#e5e5ea';
-    ctx.fillText('GUEST TEAM', 350, 630);
-
-    // 中間 VS 裝飾
-    ctx.fillStyle = '#ef3e42';
-    ctx.font = 'italic bold 65px Oswald, sans-serif';
-    ctx.fillText('VS', 600, 470);
-
-    // 填入主隊數據
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 52px Oswald, sans-serif';
-    ctx.fillText(homeName, 850, 360);
-    ctx.font = 'bold 200px Oswald, sans-serif';
-    ctx.fillText(homeRuns, 850, 560);
-    ctx.font = '32px Oswald, sans-serif';
-    ctx.fillStyle = '#e5e5ea';
-    ctx.fillText('HOME TEAM', 850, 630);
-
-    // 底部 MVP 金黃色榮譽榜
-    ctx.fillStyle = '#ffcc00';
-    ctx.fillRect(100, 750, 1000, 310);
-
-    ctx.fillStyle = '#012a5e';
-    ctx.font = 'bold 45px Oswald, sans-serif';
-    ctx.fillText('🏆 TODAY\'S GAME MVP 🏆', 600, 825);
-    ctx.font = 'bold 85px Oswald, sans-serif';
-    ctx.fillText(mvpName, 600, 935);
-    ctx.font = '600 42px Oswald, sans-serif';
-    ctx.fillText(mvpStats, 600, 1010);
-
-    // 4. 🖨️ 轉成圖片並彈出
-    document.getElementById('reportResultImg').src = canvas.toDataURL('image/png');
-    document.getElementById('reportModal').style.display = 'flex';
-  });
-
-  // 彈出視窗的「關閉」按鈕事件
-  document.getElementById('btnCloseReportModal').addEventListener('click', () => {
-    document.getElementById('reportModal').style.display = 'none';
-  });
- 
 </script>
 
 <style>
@@ -758,7 +630,7 @@
     <!-- 🟦 導覽列：位於建物圖片下方（僅存在於 NEWS 頁面內） -->
     <div class="news-navbar-wrap">
       <div class="top-navbar">
-        
+
 <div class="navbar-logo" style="background-image:url('images/ait-logo.jpg'); background-size:cover; background-position:center;"></div>
 
         <button class="nav-link active" data-page="news" onclick="selectMainPage('news')">NEWS</button>
@@ -775,15 +647,9 @@
       <div id="moreMenuDropdown" class="more-menu-dropdown">
         <button class="main-menu-item" onclick="menuClearPreviousDay()">🗑 Re:0</button>
         <button class="main-menu-item" id="menuLoginItem" onclick="openLoginModal()">🔐 LOG IN</button>
-       <div class="main-menu-dropdown" id="myMainMenuDropdown">
-  <!-- 您原本的選單項目，例如： -->
-  <!-- <button class="main-menu-item active">SCHEDULE</button> -->
-  <div class="main-menu-divider"></div>
-  <button type="button" class="main-menu-item" id="btnGenReport" style="color: var(--brand-red);">🔥 產生今日戰報圖</button>
-</div>
-       
+        <div class="main-menu-divider"></div>
+        <button type="button" class="main-menu-item" onclick="window.generateReport(); toggleMoreMenu(event);" style="color: var(--brand-red); font-weight: 700;">🔥 今日賽後戰報</button>
       </div>
-
     </div>
 
     <h2>Upcoming Matches</h2>
@@ -814,6 +680,54 @@
       </div>
     </div>
   </div>
+
+    <!-- ============================================================= -->
+    <!-- 🚀 新增：AIT SYSTEM CHANGELOG (系統功能更新歷程公告欄) -->
+    <!-- ============================================================= -->
+    <h2 style="margin-top:24px; border-left: 4px solid #34c759;">System Updates & Changelog</h2>
+    <div class="roster-panel" style="background: #ffffff; padding: 14px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px;">
+      <div style="max-height: 240px; overflow-y: auto; padding-right: 4px;">
+        
+        <!-- 🔥 當前最新版本 (含近期自訂主畫面與雙場次戰報功能) -->
+        <div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+            <span style="background: #e3f7e6; color: #1a7a2e; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">v2.1.0 (Current)</span>
+            <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-09-16</span>
+          </div>
+          <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13.5px; color: #1c1c1e; line-height: 1.7;">
+            <li>🔸 <b>全新美式雙場次戰報</b>：選單新增「今日賽後戰報」，可一鍵交叉提取 Schedule 與 Box 雙場次數據進行高畫質 Canvas 圖表渲染。</li>
+            <li>🔸 <b>手動微調 MVP 機制</b>：除了系統智慧推算敲最多安打的 MVP，並開放領隊於戰報面板內直接打字與手動套用覆蓋。</li>
+            <li>🔸 <b>行動裝置主畫面圖示支援</b>：全面最佳化 iOS 與 Android 加入主畫面設定，使自訂 `ait-logo.jpg` 桌面圖示能完美呈現。</li>
+            <li>🔸 <b>賽程時間防錯修復</b>：全面修正賽程表（Schedule）因載入時序產生的變數死結，還原經典的雙比分與時間對齊排版。</li>
+          </ul>
+        </div>
+
+        <!-- 歷史版本 2 -->
+        <div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px; opacity: 0.85;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+            <span style="background: #f0f0f2; color: #636366; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">v1.5.0</span>
+            <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-05-20</span>
+          </div>
+          <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13px; color: #48484a; line-height: 1.6;">
+            <li>🔹 <b>LINE 打序智慧匯入</b>：新增智慧分析輸入框，支援將 LINE 聊天室內容複製貼上自動過濾、解析並一鍵匯入當日打序。</li>
+            <li>🔹 <b>即時 BSO 紀錄器</b>：計分板介面右側新增壞球、好球、出局數（Ball/Strike/Out）點擊燈號，並綁定滿三出局防誤觸換局 Toast 提示。</li>
+          </ul>
+        </div>
+
+        <!-- 歷史版本 1 -->
+        <div style="opacity: 0.6;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+            <span style="background: #f0f0f2; color: #636366; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">v1.0.0</span>
+            <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-01-10</span>
+          </div>
+          <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13px; color: #48484a; line-height: 1.6;">
+            <li>🔹 <b>AIT Softball 雲端資料庫上線</b>：全面接軌 Firebase Firestore 異步快照同步層，打通多網頁多端即時同步數據。</li>
+            <li>🔹 <b>守備位置視覺化熱區</b>：打序分頁下方提供直覺的棒球場九人守備位置拖拉與晶片化分配顯示面板。</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
 
   <!-- ============================================================= -->
   <!-- 👤 ROSTER 分頁 -->
@@ -1146,8 +1060,7 @@
   <button class="main-menu-item" data-page="lineup" onclick="selectMainPage('lineup')">📋 LINE UP</button>
   <button class="main-menu-item" data-page="score" onclick="selectMainPage('score')">🧮 SCORES</button>
   <div class="main-menu-divider"></div>
-  <button class="main-menu-item" onclick="menuClearPreviousDay()">🗑 RE:0</button>
-  <button class="main-menu-item" id="menuLoginItemFloating" onclick="openLoginModal()">🔐 LOG IN</button>
+
 </div>
 
 <div id="fieldGhost"></div>
@@ -2307,7 +2220,7 @@
     showToast(`已記錄 ${p ? p.name : ''}（${gameLabel}）第${col}打席：${def.label}（尚未儲存）`);
   }
 
-  // 🔸按 SAVE 才會同步至雲端與球員資料
+  // 🔸 僅移除本機暫存紀錄，需按 SAVE 才會同步至雲端與球員資料
   function removeBoxEntry(entryId) {
     const date = todayStr();
     ensureBoxDate(date);
@@ -2725,16 +2638,175 @@
     }
   }
   waitForFirebaseAndInit();
-</script>
- 
-<!-- 彈出顯示圖片的視窗 -->
-<div id="reportModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9999; align-items:center; justify-content:center; flex-direction:column; gap:16px; padding:20px;">
-  <div style="color:white; font-size:15px; font-weight:bold; text-align:center; letter-spacing:0.5px;">📸 戰報已完成！長按下方圖片即可儲存/分享</div>
-  <img id="reportResultImg" style="max-width:100%; max-height:65vh; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.6);">
-  <button type="button" class="btn-muted" id="btnCloseReportModal" style="width: 50%; padding: 12px; font-weight: bold; border-radius:8px;">關閉視窗</button>
-</div>
+// ==================================================================
+  // 📸 今日雙場次戰報智慧引擎 (完全修復：全域視窗函數接軌，完美解除切換死結)
+  // ==================================================================
+  let reportSelectedGame = 1; 
+  let manualMvpOverridden = { game1: null, game2: null };
 
-<!-- 背景繪圖用的隱藏畫布 -->
+  window.generateReport = function(gameNum) {
+    if (gameNum !== undefined && gameNum !== null) {
+      reportSelectedGame = Number(gameNum);
+    }
+
+    // 1. ⚙️ 控制面板黃金亮色焦點自動切換
+    const g1Btn = document.getElementById('btnReportG1');
+    const g2Btn = document.getElementById('btnReportG2');
+    if (g1Btn && g2Btn) {
+      g1Btn.style.background = reportSelectedGame === 1 ? '#ffcc00' : '#e5e5ea';
+      g1Btn.style.color = reportSelectedGame === 1 ? '#012a5e' : '#1c1c1e';
+      g2Btn.style.background = reportSelectedGame === 2 ? '#ffcc00' : '#e5e5ea';
+      g2Btn.style.color = reportSelectedGame === 2 ? '#012a5e' : '#1c1c1e';
+    }
+
+    // 2. 🔍 智慧交叉檢索：從雲端 schedule 資料庫中提取當天兩場的實際對決總比分
+    let guestName = "OPPONENT";
+    let homeName = "AIT";
+    let guestRuns = "0"; 
+    let homeRuns = "0";  
+
+    try {
+      const today = todayStr(); 
+      const matchToday = (schedule.matches || []).find(m => m.date === today);
+      
+      if (matchToday) {
+        guestName = (matchToday.teamA || "OPPONENT").toUpperCase();
+        const gameData = reportSelectedGame === 1 ? matchToday.game1 : matchToday.game2;
+        if (gameData) {
+          guestRuns = (gameData.scoreA !== null && gameData.scoreA !== undefined) ? String(gameData.scoreA) : "0";
+          homeRuns = (gameData.scoreB !== null && gameData.scoreB !== undefined) ? String(gameData.scoreB) : "0";
+        }
+      } else {
+        guestName = "OPPONENT";
+        guestRuns = document.getElementById('top_R')?.textContent || "0";
+        homeRuns = document.getElementById('bot_R')?.textContent || "0";
+      }
+    } catch (e) { console.error("Score database stream read crash:", e); }
+
+    // 3. 🧠 自動計算或覆蓋 MVP 榮譽數據
+    let mvpName = "NO MVP RECORDED";
+    let mvpStats = "Please enter and save box score first.";
+
+    const cacheKey = `game${reportSelectedGame}`;
+    if (manualMvpOverridden[cacheKey]) {
+      mvpName = manualMvpOverridden[cacheKey].name;
+      mvpStats = manualMvpOverridden[cacheKey].stats;
+    } else {
+      try {
+        const date = todayStr();
+        if (boxScore && boxScore[date] && boxScore[date].entries && boxScore[date].entries.length > 0) {
+          const playerStats = {};
+          boxScore[date].entries.forEach(e => {
+            if (e.game !== reportSelectedGame) return; 
+            if (!playerStats[e.playerId]) {
+              playerStats[e.playerId] = { id: e.playerId, hits: 0, hr: 0, total: 0 };
+            }
+            playerStats[e.playerId].total++;
+            if (['1B', '2B', '3B', 'HR'].includes(e.code)) playerStats[e.playerId].hits++;
+            if (e.code === 'HR') playerStats[e.playerId].hr++;
+          });
+
+          let bestPlayer = null;
+          for (let id in playerStats) {
+            if (!bestPlayer || playerStats[id].hits > bestPlayer.hits) bestPlayer = playerStats[id];
+          }
+          if (bestPlayer && typeof findPlayerById === 'function') {
+            const p = findPlayerById(bestPlayer.id);
+            if (p) {
+              mvpName = p.name.toUpperCase();
+              mvpStats = `HITS: ${bestPlayer.hits} / AB: ${bestPlayer.total} ${bestPlayer.hr > 0 ? `(${bestPlayer.hr} HR)` : ''}`;
+            }
+          }
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    // 同步刷新手動編輯框內的預設文字
+    const iptN = document.getElementById('iptMvpName');
+    const iptS = document.getElementById('iptMvpStats');
+    if (iptN && iptS) {
+      iptN.value = mvpName.includes("NO MVP") ? "" : mvpName;
+      iptS.value = mvpStats.includes("Please enter") ? "" : mvpStats;
+    }
+
+    // 4. 🎨 Canvas 戰報視覺圖渲染 (1200x1200px)
+    const canvas = document.getElementById('reportCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, 1200);
+    gradient.addColorStop(0, '#005a9c'); gradient.addColorStop(1, '#012a5e');
+    ctx.fillStyle = gradient; ctx.fillRect(0, 0, 1200, 1200);
+
+    ctx.fillStyle = '#ef3e42'; ctx.fillRect(0, 0, 1200, 40); ctx.fillRect(0, 175, 1200, 12);
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 72px Oswald, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(`GAME ${reportSelectedGame} SCORE REPORT`, 600, 130);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.07)'; ctx.fillRect(100, 250, 1000, 440);
+
+    // AIT (固定為主隊)
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 55px Oswald, sans-serif'; ctx.fillText(homeName, 350, 360);
+    ctx.font = 'bold 210px Oswald, sans-serif'; ctx.fillText(homeRuns, 350, 570);
+    ctx.font = '32px Oswald, sans-serif'; ctx.fillStyle = '#e5e5ea'; ctx.fillText('HOME TEAM', 350, 640);
+
+    // 中間 VS.
+    ctx.fillStyle = '#ef3e42'; ctx.font = 'italic bold 65px Oswald, sans-serif'; ctx.fillText('VS.', 600, 470);
+
+    // 對手 (客隊)
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 55px Oswald, sans-serif'; ctx.fillText(guestName, 850, 360);
+    ctx.font = 'bold 210px Oswald, sans-serif'; ctx.fillText(guestRuns, 850, 570);
+    ctx.font = '32px Oswald, sans-serif'; ctx.fillStyle = '#e5e5ea'; ctx.fillText('GUEST TEAM', 850, 640);
+
+    // 金黃色 MVP 榮譽榜
+    ctx.fillStyle = '#ffcc00'; ctx.fillRect(100, 750, 1000, 310);
+    ctx.fillStyle = '#012a5e'; ctx.font = 'bold 45px Oswald, sans-serif'; ctx.fillText('🏆 TODAY\'S GAME MVP 🏆', 600, 825);
+    ctx.font = 'bold 85px Oswald, sans-serif'; ctx.fillText(mvpName, 600, 935);
+    ctx.font = '600 42px Oswald, sans-serif'; ctx.fillText(mvpStats, 600, 1010);
+
+    document.getElementById('reportResultImg').src = canvas.toDataURL('image/png');
+    document.getElementById('reportModal').style.display = 'flex';
+  };
+
+  // 🎯 手動修改 MVP 的專屬套用全域函數
+  window.applyManualMvp = function() {
+    const cacheKey = `game${reportSelectedGame}`;
+    const nameVal = document.getElementById('iptMvpName')?.value.trim();
+    const statsVal = document.getElementById('iptMvpStats')?.value.trim();
+    manualMvpOverridden[cacheKey] = {
+      name: nameVal || "NO MVP RECORDED",
+      stats: statsVal || "Manually Modified"
+    };
+    window.generateReport(); 
+    showToast('🏆 MVP 資料修改已套用至圖表');
+  };
+
+</script>
+
+
+<!-- ==================================================================
+     📸 戰報組件外殼與手動編輯區 (直接貼在 </body> 上方)
+     ================================================================== -->
+<div id="reportModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.94); z-index:9999; align-items:center; justify-content:center; flex-direction:column; gap:12px; padding:16px;">
+  
+  <!-- 控制面板：直接內建 onclick，100% 繞過載入時序漏洞 -->
+  <div style="background: white; padding: 12px; border-radius: 12px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 8px;">
+    <div style="display: flex; gap: 8px;">
+      <button type="button" id="btnReportG1" onclick="if(typeof window.generateReport === 'function') window.generateReport(1);" style="flex:1; padding:10px; font-weight:bold; border-radius:6px; border:none; background:#ffcc00; color:#012a5e;">第一場戰報</button>
+      <button type="button" id="btnReportG2" onclick="if(typeof window.generateReport === 'function') window.generateReport(2);" style="flex:1; padding:10px; font-weight:bold; border-radius:6px; border:none; background:#e5e5ea; color:#1c1c1e;">第二場戰報</button>
+    </div>
+    <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
+      <span style="font-size: 13px; font-weight: bold; color: #333; min-width: 65px;">手動修改:</span>
+      <input type="text" id="iptMvpName" placeholder="修改 MVP 姓名" style="padding: 6px 10px; font-size: 14px; flex:1;" />
+      <input type="text" id="iptMvpStats" placeholder="修改 表現數據" style="padding: 6px 10px; font-size: 14px; flex:1;" />
+      <button type="button" id="btnMvpApply" onclick="if(typeof window.applyManualMvp === 'function') window.applyManualMvp();" style="background:var(--brand-blue); color:white; padding: 6px 12px; border-radius: 6px; font-size:13px; font-weight:bold;">套用</button>
+    </div>
+  </div>
+
+  <div style="color:white; font-size:14px; font-weight:bold; text-align:center; letter-spacing:0.5px;">📸 長按下方圖片即可儲存 / 分享今日戰報</div>
+  <img id="reportResultImg" style="max-width:100%; max-height:55vh; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.6);">
+  <button type="button" class="btn-muted" onclick="document.getElementById('reportModal').style.display='none'" style="width: 50%; padding: 10px; font-weight: bold; border-radius:8px;">關閉視窗</button>
+</div>
 <canvas id="reportCanvas" width="1200" height="1200" style="display:none;"></canvas>
+
 </body>
 </html>
