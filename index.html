@@ -968,63 +968,76 @@
         <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
 
-      <div class="pos-row">
-        <div>
-          <label>主</label>
-          <select id="primaryPosSelect" onchange="updateModalPrimary(this.value)"></select>
-        </div>
-        <div>
-          <label>副（選填）</label>
-          <select id="secondaryPosSelect" onchange="updateModalSecondary(this.value)"></select>
-        </div>
+     <div class="pos-row">
+      <div style="flex:1;">
+<label>主守位</label>
+        <select id="primaryPosSelect" onchange="updateModalPrimary(this.value)">
+          <option value="" disabled selected hidden>主守備位置</option>
+        </select>
       </div>
-
-      <div class="modal-summary" id="modalSummary"></div>
-
-      <div class="modal-form">
-        <h3>新增當日打擊紀錄</h3>
-        <label>日期</label>
-        <input type="date" id="recordDate" />
-        <div class="stat-input-row">
-          <div><label>一安 1B</label><input type="number" min="0" id="rec1B" value="0" /></div>
-          <div><label>二安 2B</label><input type="number" min="0" id="rec2B" value="0" /></div>
-          <div><label>三安 3B</label><input type="number" min="0" id="rec3B" value="0" /></div>
-          <div><label>全壘打 HR</label><input type="number" min="0" id="recHR" value="0" /></div>
-        </div>
-        <div class="stat-input-row">
-          <div><label>四壞 BB</label><input type="number" min="0" id="recBB" value="0" /></div>
-          <div><label>失誤 E</label><input type="number" min="0" id="recE" value="0" /></div>
-          <div><label>野選 FC</label><input type="number" min="0" id="recFC" value="0" /></div>
-          <div><label>出局 Out</label><input type="number" min="0" id="recOuts" value="0" /></div>
-        </div>
-        <button class="btn-add" style="width:100%;margin-top:12px;" onclick="saveRecord()">新增紀錄</button>
-      </div>
-
-      <div class="modal-history">
-        <h3>歷史紀錄</h3>
-        <div id="recordList"></div>
+      <div style="flex:1;">
+<label>副守位(option)</label>
+        <select id="secondaryPosSelect" onchange="updateModalSecondary(this.value)">
+          <option value="" disabled selected hidden>副守備位置（選填）</option>
+        </select>
       </div>
     </div>
-  </div>
 
-  <div id="boxPickerOverlay" class="modal-overlay" onclick="closeBoxPickerOnOverlay(event)" style="align-items:center;">
-    <div class="modal-box" onclick="event.stopPropagation()" style="max-width:360px; border-radius:16px;">
-      <div class="modal-header">
-        <span id="boxPickerTitle" style="font-weight:700;font-size:15px;flex:1;"></span>
-        <button class="modal-close" onclick="closeBoxPicker()">✕</button>
+    <!-- 打擊數據總覽 -->
+    <div class="modal-summary" id="modalSummary"></div>
+
+    <!-- 1. 歷史紀錄 -->
+    <div class="modal-history">
+      <h3>歷史紀錄</h3>
+      <div id="recordList"></div>
+    </div>
+
+    <!-- 2. 新增當日打擊紀錄 -->
+    <div class="modal-form">
+      <h3>新增當日打擊紀錄</h3>
+      <label>日期</label>
+      <input type="date" id="recordDate" />
+      
+      <div class="stat-input-row">
+        <div><label>一安 1B</label><input type="number" min="0" id="rec1B" value="0" /></div>
+        <div><label>二安 2B</label><input type="number" min="0" id="rec2B" value="0" /></div>
+        <div><label>三安 3B</label><input type="number" min="0" id="rec3B" value="0" /></div>
+        <div><label>全壘打 HR</label><input type="number" min="0" id="recHR" value="0" /></div>
       </div>
-      <div class="outcome-grid">
-        <button class="outcome-btn res-1B" onclick="chooseBoxResult('1B')">一安</button>
-        <button class="outcome-btn res-2B" onclick="chooseBoxResult('2B')">二安</button>
-        <button class="outcome-btn res-3B" onclick="chooseBoxResult('3B')">三安</button>
-        <button class="outcome-btn res-HR" onclick="chooseBoxResult('HR')">全壘打</button>
-        <button class="outcome-btn res-BB" onclick="chooseBoxResult('BB')">四壞</button>
-        <button class="outcome-btn res-E" onclick="chooseBoxResult('E')">失誤</button>
-        <button class="outcome-btn res-FC" onclick="chooseBoxResult('FC')">野選</button>
-        <button class="outcome-btn res-OUT" onclick="chooseBoxResult('OUT')">出局</button>
+      
+      <div class="stat-input-row">
+        <div><label>四壞 BB</label><input type="number" min="0" id="recBB" value="0" /></div>
+        <div><label>失誤 E</label><input type="number" min="0" id="recE" value="0" /></div>
+        <div><label>野選 FC</label><input type="number" min="0" id="recFC" value="0" /></div>
+        <div><label>出局 Out</label><input type="number" min="0" id="recOuts" value="0" /></div>
       </div>
+      
+      <button class="btn-add" style="width:100%;margin-top:12px;" onclick="saveRecord()">新增紀錄</button>
     </div>
   </div>
+</div>
+
+<!-- 快速選擇打擊結果 Modal -->
+<div id="boxPickerOverlay" class="modal-overlay" onclick="closeBoxPickerOnOverlay(event)" style="align-items:center;">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:360px; border-radius:16px;">
+    <div class="modal-header">
+      <span id="boxPickerTitle" style="font-weight:700;font-size:15px;flex:1;"></span>
+      <button class="modal-close" onclick="closeBoxPicker()">✕</button>
+    </div>
+    <div class="outcome-grid">
+      <button class="outcome-btn res-1B" onclick="chooseBoxResult('1B')">一安</button>
+      <button class="outcome-btn res-2B" onclick="chooseBoxResult('2B')">二安</button>
+      <button class="outcome-btn res-3B" onclick="chooseBoxResult('3B')">三安</button>
+      <button class="outcome-btn res-HR" onclick="chooseBoxResult('HR')">全壘打</button>
+      <button class="outcome-btn res-BB" onclick="chooseBoxResult('BB')">四壞</button>
+      <button class="outcome-btn res-E" onclick="chooseBoxResult('E')">失誤</button>
+      <button class="outcome-btn res-FC" onclick="chooseBoxResult('FC')">野選</button>
+      <button class="outcome-btn res-OUT" onclick="chooseBoxResult('OUT')">出局</button>
+    </div>
+  </div>
+</div>
+
+
 
   <div id="copyModalOverlay" class="modal-overlay" onclick="closeCopyModal(event)">
     <div class="modal-box" onclick="event.stopPropagation()" style="max-height:60vh;">
@@ -1065,6 +1078,8 @@
 
 <div id="fieldGhost"></div>
 <div id="toast" class="toast"></div>
+
+
 
 <script>
   /* ==================================================================
@@ -1411,7 +1426,8 @@
     const s = computeStats(p);
     document.getElementById('modalSummary').innerHTML = `
       打擊率 <b>${fmt3(s.avg)}</b> 上壘率 <b>${fmt3(s.obp)}</b> 長打率 <b>${fmt3(s.slg)}</b><br>
-      安打:${s.hits}(1B ${s.singles}/2B ${s.doubles}/3B ${s.triples}/HR ${s.hr}) BB:${s.bb} 失誤:${s.errors} 野選:${s.fc} 出局:${s.outs} 打數:${s.ab}
+      安打:${s.hits}(1B ${s.singles}/2B ${s.doubles}/3B ${s.triples}/HR ${s.hr}) BB:${s.bb} <br>
+	失誤:${s.errors} 野選:${s.fc} 出局:${s.outs} 打數:${s.ab}
     `;
   }
   function renderRecordList(p) {
