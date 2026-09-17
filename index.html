@@ -596,6 +596,62 @@
   .match-score-display input {
     width: 40px; padding: 5px 2px; text-align: center; border: 1px solid #d1d1d6; border-radius: 6px; font-size: 14px;
   }
+
+
+  /* ==================================================================
+     🟨 SECTION 5：戰績表 / RECORDS
+     ================================================================== */
+  #pageRecords.main-page { padding-top:58px; }
+  #pageRecords h2 { border-left:4px solid #ffcc00; }
+  .records-card {
+    background:#fff; border-radius:14px; padding:12px; margin-bottom:14px;
+    box-shadow:0 1px 4px rgba(0,0,0,.07); overflow:hidden;
+  }
+  .records-card-title {
+    display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;
+  }
+  .records-card-title strong { display:block; font-size:16px; color:var(--brand-blue-dark); }
+  .records-card-title span { display:block; margin-top:3px; font-size:11px; color:#8e8e93; line-height:1.4; }
+  .records-table-wrap { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .records-table { width:100%; min-width:560px; border-collapse:collapse; font-size:12px; }
+  .records-table th, .records-table td { border-bottom:1px solid #e5e5ea; padding:8px 5px; text-align:center; white-space:nowrap; }
+  .records-table th { background:#f5f7fa; color:#48484a; font-weight:700; position:sticky; top:0; }
+  .records-table td:first-child, .records-table th:first-child { text-align:left; font-weight:700; }
+  .records-table .win-rate { font-weight:800; color:var(--brand-blue); }
+  .league-table input { width:58px !important; min-width:58px; padding:7px 3px !important; font-size:13px !important; text-align:center; }
+  .league-table .team-name-input { width:120px !important; min-width:120px; text-align:left; }
+  .league-delete { width:28px; height:28px; padding:0; border-radius:14px; background:#ffe5e5; color:var(--brand-red); }
+  .records-save-btn { width:100%; margin-top:10px; }
+  .records-add-btn { flex-shrink:0; font-size:12px !important; padding:7px 9px !important; }
+  .player-stat-tabs { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:10px 0 12px; }
+  .player-stat-tab { background:#e5e5ea; color:#48484a; font-weight:800; padding:10px 6px; border-radius:9px; font-size:13px; }
+  .player-stat-tab.active { background:var(--brand-blue); color:#fff; }
+  .pitching-record { background:#fff; border-radius:10px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:12px; }
+  .pitching-record .pitch-main { line-height:1.65; }
+  .pitching-record .pitch-date { font-weight:800; color:var(--brand-blue-dark); }
+  .pitching-record .rec-del { flex-shrink:0; }
+  @media (max-width:600px){
+    body { padding-left:8px; padding-right:8px; }
+    h1 { font-size:20px; }
+    h2 { font-size:15px; margin-top:18px; }
+    .top-navbar { border-radius:10px; padding:7px 8px; gap:3px; }
+    .nav-link { font-size:12px; padding:8px 7px; letter-spacing:.3px; }
+    .news-hero { height:150px; }
+    .roster-panel { padding:8px; }
+    li.roster-row { padding:6px 4px; gap:3px; }
+    .roster-name-btn { font-size:13px; }
+    .roster-pos-line { font-size:10px; }
+    .roster-stats { width:72px; font-size:10px; }
+    .roster-badge { display:none; }
+    .match-header-row,.match-sub-row { padding-right:28px; gap:5px; }
+    .match-date-big { font-size:21px; min-width:48px; }
+    .match-team-name-display { font-size:13px; }
+    .score-panel-row { gap:5px; }
+    .bso-box { width:96px; }
+    .records-card { padding:10px; }
+    .records-card-title { align-items:flex-start; }
+  }
+
 </style>
 </head>
 <body>
@@ -642,6 +698,8 @@
         <button class="nav-link" data-page="lineup" onclick="selectMainPage('lineup')">LINE UP</button>
         <span class="nav-sep">›</span>
         <button class="nav-link" data-page="score" onclick="selectMainPage('score')">SCORES</button>
+        <span class="nav-sep">›</span>
+        <button class="nav-link" data-page="records" onclick="selectMainPage('records')">RECORDS</button>
         <button class="nav-more" onclick="toggleMoreMenu(event)">⋯</button>
       </div>
       <div id="moreMenuDropdown" class="more-menu-dropdown">
@@ -908,6 +966,51 @@
   </div>
 
   <!-- ============================================================= -->
+  <!-- 🟨 RECORDS / 戰績表 分頁 -->
+  <!-- ============================================================= -->
+  <div id="pageRecords" class="main-page">
+    <h2>STANDING</h2>
+
+    <section class="records-card">
+      <div class="records-card-title">
+        <div>
+          <strong>對戰戰績</strong>
+          <span>歷史對戰勝負</span>
+        </div>
+        <button class="btn-muted records-refresh" onclick="renderRecordsPage()">↻ 更新</button>
+      </div>
+      <div class="records-table-wrap">
+        <table class="records-table">
+          <thead>
+            <tr><th>對手</th><th>場次</th><th>勝</th><th>敗</th><th>和</th><th>勝率</th><th>得分</th><th>失分</th></tr>
+          </thead>
+          <tbody id="headToHeadBody"></tbody>
+        </table>
+      </div>
+      <p id="headToHeadEmpty" class="empty-msg" style="display:none;">尚無已完成的歷史賽事。</p>
+    </section>
+
+    <section class="records-card">
+      <div class="records-card-title">
+        <div>
+          <strong>聯盟戰績</strong>
+          <span>2026聯盟季賽成績</span>
+        </div>
+        <button class="btn-add records-add-btn" onclick="addLeagueTeam()">＋ 新增球隊</button>
+      </div>
+      <div class="records-table-wrap">
+        <table class="records-table league-table">
+          <thead>
+            <tr><th>球隊</th><th>已賽</th><th>勝</th><th>敗</th><th>平</th><th>勝率</th><th></th></tr>
+          </thead>
+          <tbody id="leagueStandingsBody"></tbody>
+        </table>
+      </div>
+      <button class="btn-add records-save-btn" onclick="saveLeagueStandings()">💾 儲存聯盟戰績</button>
+    </section>
+  </div>
+
+  <!-- ============================================================= -->
   <!-- 🟪 SCHEDULE 分頁 -->
   <!-- ============================================================= -->
   <div id="pageSchedule" class="main-page">
@@ -943,7 +1046,16 @@
         </select>
       </div>
       <div class="match-teams-row">
-        <input type="text" id="matchTeamAInput" placeholder="對手" />
+        <input type="text" id="matchTeamAInput" list="opponentList" placeholder="對手（可選擇或手動輸入）" autocomplete="off" />
+        <datalist id="opponentList">
+          <option value="3A BOSS"></option>
+          <option value="球魂"></option>
+          <option value="TALKS"></option>
+          <option value="SNIPERS"></option>
+          <option value="黔東來"></option>
+          <option value="WIN"></option>
+          <option value="新亞"></option>
+        </datalist>
         <span class="match-vs-label">VS</span>
         <input type="text" value="AIT" disabled class="team-b-fixed" />
       </div>
@@ -983,12 +1095,19 @@
       </div>
     </div>
 
+    <!-- 個人紀錄切換：主守位 / 副守位 / Batting / Pitching -->
+    <div class="player-stat-tabs">
+      <button type="button" id="playerTabBatting" class="player-stat-tab active" onclick="switchPlayerStatTab('batting')">Batting</button>
+      <button type="button" id="playerTabPitching" class="player-stat-tab" onclick="switchPlayerStatTab('pitching')">Pitching</button>
+    </div>
+
     <!-- 打擊數據總覽 -->
-    <div class="modal-summary" id="modalSummary"></div>
+    <div id="battingPanel">
+      <div class="modal-summary" id="modalSummary"></div>
 
     <!-- 1. 歷史紀錄 -->
     <div class="modal-history">
-      <h3>歷史紀錄</h3>
+      <h3>2026 Regular Season</h3>
       <div id="recordList"></div>
     </div>
 
@@ -1013,6 +1132,36 @@
       </div>
       
       <button class="btn-add" style="width:100%;margin-top:12px;" onclick="saveRecord()">新增紀錄</button>
+    </div>
+    </div>
+
+    <!-- 投手紀錄 -->
+    <div id="pitchingPanel" style="display:none;">
+      <div class="modal-summary" id="pitchingSummary"></div>
+
+      <div class="modal-history">
+        <h3>2026 Regular Season</h3>
+        <div id="pitchingRecordList"></div>
+      </div>
+
+      <div class="modal-form">
+        <h3>新增當日投球紀錄</h3>
+        <label>日期</label>
+        <input type="date" id="pitchRecordDate" />
+        <div class="stat-input-row pitching-simple-row">
+          <div><label>投球局 IP</label><input type="number" min="0" step="0.1" id="pitchIP" value="0" /></div>
+          <div><label>勝投 W</label><input type="number" min="0" id="pitchW" value="0" /></div>
+          <div><label>敗投 L</label><input type="number" min="0" id="pitchL" value="0" /></div>
+          <div><label>中繼 HLD</label><input type="number" min="0" id="pitchHLD" value="0" /></div>
+        </div>
+        <div class="stat-input-row pitching-simple-row">
+          <div><label>四壞 BB</label><input type="number" min="0" id="pitchBB" value="0" /></div>
+          <div><label>三振 SO</label><input type="number" min="0" id="pitchSO" value="0" /></div>
+          <div><label>失分 R</label><input type="number" min="0" id="pitchR" value="0" /></div>
+          <div><label>責失 ER</label><input type="number" min="0" id="pitchER" value="0" /></div>
+        </div>
+        <button class="btn-add" style="width:100%;margin-top:12px;" onclick="savePitchingRecord()">新增投球紀錄</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1072,6 +1221,7 @@
   <button class="main-menu-item" data-page="roster" onclick="selectMainPage('roster')">👤 ROSTER</button>
   <button class="main-menu-item" data-page="lineup" onclick="selectMainPage('lineup')">📋 LINE UP</button>
   <button class="main-menu-item" data-page="score" onclick="selectMainPage('score')">🧮 SCORES</button>
+  <button class="main-menu-item" data-page="records" onclick="selectMainPage('records')">🏆 戰績表</button>
   <div class="main-menu-divider"></div>
 
 </div>
@@ -1092,6 +1242,7 @@
   let lineups = { game1: [], game2: [] };
   let boxScore = {};
   let schedule = { matches: [] };
+  let leagueStandings = [];
   let firebaseReady = false;
   let isAdminLoggedIn = false;
 
@@ -1115,9 +1266,11 @@
         lineups = data.lineups || { game1: [], game2: [] };
         boxScore = data.boxScore || {};
         schedule = data.schedule || { matches: [] };
+        leagueStandings = data.leagueStandings || getDefaultLeagueStandings();
       } else {
         roster = []; rosterSort = 'custom'; lineups = { game1: [], game2: [] }; boxScore = {};
         schedule = { matches: getDefaultScheduleMatches() };
+        leagueStandings = getDefaultLeagueStandings();
         saveAllToFirebase();
       }
 
@@ -1133,6 +1286,7 @@
       renderBoxScoreHeader();
       render();
       renderSchedule();
+      renderRecordsPage();
     }, (error) => {
       console.error('Firebase 同步失敗：', error);
       document.getElementById('cloudLoading').innerHTML =
@@ -1143,7 +1297,7 @@
   function saveAllToFirebase() {
     const { db, doc, setDoc } = window.__fb;
     const teamRef = doc(db, "teams", TEAM_DOC_ID);
-    setDoc(teamRef, { roster, rosterSort, lineups, boxScore, schedule }, { merge: true })
+    setDoc(teamRef, { roster, rosterSort, lineups, boxScore, schedule, leagueStandings }, { merge: true })
       .catch(err => {
         console.error('寫入雲端失敗：', err);
         showToast('⚠️ 儲存失敗：權限不足或網路異常');
@@ -1274,6 +1428,7 @@
     document.getElementById('pageLineup').classList.toggle('active', page === 'lineup');
     document.getElementById('pageScore').classList.toggle('active', page === 'score');
     document.getElementById('pageSchedule').classList.toggle('active', page === 'schedule');
+    document.getElementById('pageRecords').classList.toggle('active', page === 'records');
 
     document.querySelectorAll('.nav-link').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.page === page);
@@ -1289,6 +1444,7 @@
       renderNewsSchedulePreview();
       loadMLBScores();
     }
+    if (page === 'records') renderRecordsPage();
   }
 
 
@@ -2369,8 +2525,8 @@
     });
     const ymKeys = Object.keys(groups).sort();
 
-    if (filterSelect) {
-      let optHtml = `<option value="all" ${scheduleFilterMonth==='all'?'selected':''}>全部月份</option>`;
+ if (filterSelect) {
+      let optHtml = `<option value="current_future" ${scheduleFilterMonth==='current_future'?'selected':''}>本月份＋未來月份</option><option value="all" ${scheduleFilterMonth==='all'?'selected':''}>全部月份</option>`;
       ymKeys.forEach(ym => {
         const [y, mo] = ym.split('-');
         optHtml += `<option value="${ym}" ${scheduleFilterMonth===ym?'selected':''}>${y}年${parseInt(mo,10)}月</option>`;
@@ -2378,7 +2534,16 @@
       filterSelect.innerHTML = optHtml;
     }
 
-    const keysToShow = scheduleFilterMonth === 'all' ? ymKeys : (ymKeys.includes(scheduleFilterMonth) ? [scheduleFilterMonth] : []);
+    const currentYM = todayStr().slice(0,7);
+    const visibleYMKeys = ymKeys.filter(ym => ym >= currentYM);
+    // Default view: current month + all future months. A manually selected past month
+    // remains viewable only when the user explicitly selects it.
+    const keysToShow = scheduleFilterMonth === 'current_future'
+      ? visibleYMKeys
+      : (scheduleFilterMonth === 'all'
+        ? ymKeys
+        : (ymKeys.includes(scheduleFilterMonth) ? [scheduleFilterMonth] : []));
+
 
     if (matches.length === 0) {
       emptyMsg.textContent = '目前尚無賽程資料';
@@ -2480,6 +2645,7 @@
     });
     saveSchedule();
     renderSchedule();
+    renderRecordsPage();
 
     document.getElementById('matchDateInput').value = '';
     document.getElementById('matchTeamAInput').value = '';
@@ -2496,6 +2662,7 @@
     else if (field === 'game2ScoreB') m.game2.scoreB = value === '' ? null : Number(value);
     saveSchedule();
     renderSchedule();
+    renderRecordsPage();
   }
 
   function deleteMatch(id) {
@@ -2503,6 +2670,7 @@
       schedule.matches = (schedule.matches || []).filter(m => m.id !== id);
       saveSchedule();
       renderSchedule();
+      renderRecordsPage();
       showToast('已刪除賽程');
     });
   }
@@ -2795,6 +2963,354 @@
     window.generateReport(); 
     showToast('🏆 MVP 資料修改已套用至圖表');
   };
+
+
+  /* ==================================================================
+     🟨 SECTION 5：RECORDS / 戰績表
+     - Head-to-head is derived from completed SCHEDULE games.
+     - League standings are manually maintained and stored in Firestore.
+     ================================================================== */
+
+  const DEFAULT_OPPONENTS = ['3A BOSS','球魂','TALKS','SNIPERS','黔東來','WIN','新亞'];
+
+  function getDefaultLeagueStandings() {
+    return DEFAULT_OPPONENTS.map(name => ({ team:name, games:0, wins:0, losses:0, ties:0 }));
+  }
+
+  function ensureLeagueStandings() {
+    if (!Array.isArray(leagueStandings)) leagueStandings = [];
+    leagueStandings = leagueStandings.map(x => ({
+      team: x.team || '',
+      games: Number(x.games) || 0,
+      wins: Number(x.wins) || 0,
+      losses: Number(x.losses) || 0,
+      ties: Number(x.ties) || 0
+    })).filter(x => x.team.trim() !== '');
+  }
+
+  function calcWinPct(wins, losses) {
+    const w = Number(wins) || 0, l = Number(losses) || 0;
+    return (w + l) > 0 ? (w / (w + l) * 100).toFixed(1) + '%' : '—';
+  }
+
+  function getCompletedHeadToHead() {
+    const result = {};
+    (schedule.matches || []).forEach(m => {
+      const opponent = (m.teamA || '').trim();
+      if (!opponent) return;
+      ensureMatchGames(m);
+      [m.game1, m.game2].forEach(g => {
+        if (g.scoreA === null || g.scoreA === undefined || g.scoreB === null || g.scoreB === undefined ||
+            g.scoreA === '' || g.scoreB === '') return;
+        const oppScore = Number(g.scoreA);
+        const aitScore = Number(g.scoreB);
+        if (!Number.isFinite(oppScore) || !Number.isFinite(aitScore)) return;
+        if (!result[opponent]) result[opponent] = { games:0, wins:0, losses:0, ties:0, pf:0, pa:0 };
+        const r = result[opponent];
+        r.games++;
+        r.pf += aitScore;
+        r.pa += oppScore;
+        if (aitScore > oppScore) r.wins++;
+        else if (aitScore < oppScore) r.losses++;
+        else r.ties++;
+      });
+    });
+    return result;
+  }
+
+  function renderRecordsPage() {
+    const body = document.getElementById('headToHeadBody');
+    const empty = document.getElementById('headToHeadEmpty');
+    if (!body) return;
+
+    const h2h = getCompletedHeadToHead();
+    const names = Object.keys(h2h).sort((a,b) => a.localeCompare(b, ['zh-Hant','en'], {numeric:true}));
+    body.innerHTML = names.map(name => {
+      const r = h2h[name];
+      return `<tr>
+        <td>${escapeHtml(name)}</td>
+        <td>${r.games}</td><td>${r.wins}</td><td>${r.losses}</td><td>${r.ties}</td>
+        <td class="win-rate">${calcWinPct(r.wins,r.losses)}</td>
+        <td>${r.pf}</td><td>${r.pa}</td>
+      </tr>`;
+    }).join('');
+    if (empty) empty.style.display = names.length ? 'none' : 'block';
+
+    renderLeagueStandings();
+  }
+
+  function renderLeagueStandings() {
+    const body = document.getElementById('leagueStandingsBody');
+    if (!body) return;
+    ensureLeagueStandings();
+    body.innerHTML = leagueStandings.map((row, i) => `
+      <tr>
+        <td><input class="team-name-input" type="text" value="${escapeHtml(row.team)}"
+          onchange="updateLeagueField(${i},'team',this.value)" /></td>
+        <td><input type="number" min="0" value="${row.games}" onchange="updateLeagueField(${i},'games',this.value)" /></td>
+        <td><input type="number" min="0" value="${row.wins}" onchange="updateLeagueField(${i},'wins',this.value)" /></td>
+        <td><input type="number" min="0" value="${row.losses}" onchange="updateLeagueField(${i},'losses',this.value)" /></td>
+        <td><input type="number" min="0" value="${row.ties}" onchange="updateLeagueField(${i},'ties',this.value)" /></td>
+        <td class="win-rate">${calcWinPct(row.wins,row.losses)}</td>
+        <td><button class="league-delete" onclick="deleteLeagueTeam(${i})">✕</button></td>
+      </tr>
+    `).join('');
+  }
+
+  function updateLeagueField(index, field, value) {
+    if (!leagueStandings[index]) return;
+    if (field === 'team') leagueStandings[index].team = String(value || '').trim();
+    else leagueStandings[index][field] = Math.max(0, Number(value) || 0);
+    saveAllToFirebase();
+    renderLeagueStandings();
+  }
+
+  function addLeagueTeam() {
+    ensureLeagueStandings();
+    leagueStandings.push({ team:'新球隊', games:0, wins:0, losses:0, ties:0 });
+    saveAllToFirebase();
+    renderLeagueStandings();
+  }
+
+  function deleteLeagueTeam(index) {
+    if (!leagueStandings[index]) return;
+    leagueStandings.splice(index,1);
+    saveAllToFirebase();
+    renderLeagueStandings();
+  }
+
+  function saveLeagueStandings() {
+    ensureLeagueStandings();
+    saveAllToFirebase();
+    renderLeagueStandings();
+    showToast('聯盟戰績已儲存');
+  }
+
+
+  /* ==================================================================
+     🟦 SECTION 1：ROSTER / Pitching
+     - Keep existing batting records compatible.
+     - Add a separate pitchingRecords array for each player.
+     ================================================================== */
+
+  let activePlayerStatTab = 'batting';
+
+  function computePitchingStats(player) {
+    const records = player.pitchingRecords || [];
+    const total = {
+      games: records.length, ip:0, h:0, r:0, er:0, bb:0, so:0, hr:0,
+      w:0, l:0, sv:0, hld:0
+    };
+    records.forEach(r => {
+      ['ip','h','r','er','bb','so','hr','w','l','sv','hld'].forEach(k => {
+        total[k] += Number(r[k]) || 0;
+      });
+    });
+    total.era = total.ip > 0 ? total.er * 7 / total.ip : null;
+    total.whip = total.ip > 0 ? (total.bb + total.h) / total.ip : null;
+    return total;
+  }
+
+  function formatPitchingSummary(s) {
+    return `IP <b>${s.ip.toFixed(1)}</b> ERA <b>${s.era === null ? '—' : s.era.toFixed(2)}</b> WHIP <b>${s.whip === null ? '—' : s.whip.toFixed(2)}</b><br>
+      H:${s.h} R:${s.r} ER:${s.er} BB:${s.bb} SO:${s.so} HR:${s.hr}<br>
+      W:${s.w} L:${s.l} SV:${s.sv} HLD:${s.hld}`;
+  }
+
+  function switchPlayerStatTab(tab) {
+    activePlayerStatTab = tab === 'pitching' ? 'pitching' : 'batting';
+    const batting = document.getElementById('battingPanel');
+    const pitching = document.getElementById('pitchingPanel');
+    const btab = document.getElementById('playerTabBatting');
+    const ptab = document.getElementById('playerTabPitching');
+    if (batting) batting.style.display = activePlayerStatTab === 'batting' ? 'block' : 'none';
+    if (pitching) pitching.style.display = activePlayerStatTab === 'pitching' ? 'block' : 'none';
+    if (btab) btab.classList.toggle('active', activePlayerStatTab === 'batting');
+    if (ptab) ptab.classList.toggle('active', activePlayerStatTab === 'pitching');
+  }
+
+  function renderPitchingSummary(p) {
+    const el = document.getElementById('pitchingSummary');
+    if (el) el.innerHTML = formatPitchingSummary(computePitchingStats(p));
+  }
+
+  function renderPitchingRecordList(p) {
+    const container = document.getElementById('pitchingRecordList');
+    if (!container) return;
+    const records = [...(p.pitchingRecords || [])].sort((a,b) => String(b.date).localeCompare(String(a.date)));
+    if (!records.length) {
+      container.innerHTML = '<p style="color:#8e8e93;font-size:13px;">尚無投球紀錄</p>';
+      return;
+    }
+    container.innerHTML = records.map((r, i) => `
+      <div class="pitching-record">
+        <div class="pitch-main">
+          <div class="pitch-date">${escapeHtml(r.date || '')}</div>
+          <div>IP ${Number(r.ip||0).toFixed(1)} · H ${Number(r.h||0)} · R ${Number(r.r||0)} · ER ${Number(r.er||0)} · BB ${Number(r.bb||0)} · SO ${Number(r.so||0)} · HR ${Number(r.hr||0)}</div>
+          <div>W ${Number(r.w||0)} · L ${Number(r.l||0)} · SV ${Number(r.sv||0)} · HLD ${Number(r.hld||0)}</div>
+        </div>
+        <button class="rec-del" onclick="deletePitchingRecord(${p.pitchingRecords.indexOf(r)})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function resetPitchInputs() {
+    ['pitchIP','pitchH','pitchR','pitchER','pitchBB','pitchSO','pitchHR','pitchW','pitchL','pitchSV','pitchHLD']
+      .forEach(id => { const el=document.getElementById(id); if(el) el.value=0; });
+  }
+
+  function savePitchingRecord() {
+    const p = findPlayerById(currentModalPlayerId);
+    if (!p) return;
+    const date = document.getElementById('pitchRecordDate').value;
+    if (!date) { showToast('請選擇投球紀錄日期'); return; }
+    if (!p.pitchingRecords) p.pitchingRecords = [];
+
+    const values = {};
+    [['ip','pitchIP'],['h','pitchH'],['r','pitchR'],['er','pitchER'],['bb','pitchBB'],
+     ['so','pitchSO'],['hr','pitchHR'],['w','pitchW'],['l','pitchL'],['sv','pitchSV'],['hld','pitchHLD']]
+      .forEach(([key,id]) => values[key] = Math.max(0, Number(document.getElementById(id)?.value) || 0));
+
+    const existing = p.pitchingRecords.find(r => r.date === date);
+    if (existing) {
+      Object.keys(values).forEach(k => existing[k] = (Number(existing[k]) || 0) + values[k]);
+      showToast('同日投球紀錄已成功累加');
+    } else {
+      p.pitchingRecords.push({ date, ...values });
+      showToast('投球紀錄已新增');
+    }
+    saveRoster();
+    renderPitchingSummary(p);
+    renderPitchingRecordList(p);
+    resetPitchInputs();
+  }
+
+  function deletePitchingRecord(index) {
+    const p = findPlayerById(currentModalPlayerId);
+    if (!p || !p.pitchingRecords) return;
+    p.pitchingRecords.splice(Number(index),1);
+    saveRoster();
+    renderPitchingSummary(p);
+    renderPitchingRecordList(p);
+  }
+
+  // Override roster row layout: Primary / Secondary / Batting / Pitching in one compact line.
+  function renderRoster() {
+    const container = document.getElementById('rosterList');
+    const emptyMsg = document.getElementById('rosterEmptyMsg');
+    const search = document.getElementById('rosterSearch');
+    if (!container) return;
+    const keyword = (search?.value || '').trim().toLowerCase();
+    container.innerHTML = '';
+
+    let filtered = roster.filter(p =>
+      !keyword || String(p.name||'').toLowerCase().includes(keyword) ||
+      (p.number !== undefined && String(p.number).toLowerCase().includes(keyword))
+    );
+    if (rosterSort === 'name') {
+      filtered.sort((a,b) => (a.name||'').localeCompare((b.name||''), ['zh-Hant','en'], {sensitivity:'base',numeric:true}));
+    }
+    if (emptyMsg) emptyMsg.style.display = roster.length ? 'none' : 'block';
+
+    const currentLineup = getLineup();
+    filtered.forEach(p => {
+      const b = computeStats(p);
+      const pit = computePitchingStats(p);
+      const inLineup = currentLineup.some(e => e.id === p.id);
+      const posLine = `<span class="primary-tag">${p.primary ? '主:'+escapeHtml(p.primary) : '主:—'}</span>
+        <span class="secondary-tag"> / 副:${p.secondary ? escapeHtml(p.secondary) : '—'}</span>`;
+      const li = document.createElement('li');
+      li.className='roster-row'; li.dataset.playerId=p.id;
+      li.innerHTML = `
+        <div class="roster-handle" data-player-id="${p.id}">⠿</div>
+        <div class="roster-number ${p.number ? '' : 'empty'}">${displayNumber(p.number)}</div>
+        <div class="roster-main">
+          <button class="roster-name-btn" onclick="openModal('${p.id}')">${escapeHtml(p.name)}</button>
+          <div class="roster-pos-line">${posLine}</div>
+        </div>
+        ${inLineup ? `<span class="roster-badge">第${activeGame===1?'一':'二'}場</span>` : ''}
+        <div class="roster-stats roster-dual-stats">
+          <div>BAT ${fmt3(b.avg)}</div>
+          <div>PIT ${pit.ip > 0 ? 'ERA '+pit.era.toFixed(2) : '—'}</div>
+        </div>
+        <button class="roster-trash" onclick="deleteFromRoster('${p.id}')">🗑</button>`;
+      container.appendChild(li);
+    });
+    attachRosterDragHandlers();
+  }
+
+  // Extend player creation with a dedicated pitching record collection.
+  const _addPlayerToRoster = addPlayerToRoster;
+  function addPlayerToRoster() {
+    const nameInput = document.getElementById('nameInput');
+    const numberInput = document.getElementById('numberInput');
+    const name = nameInput.value.trim();
+    const number = numberInput.value.trim();
+    if (!name) return;
+    roster.push({ id: makeId(), name, number, primary:'', secondary:'', records:[], pitchingRecords:[] });
+    nameInput.value=''; numberInput.value='';
+    saveRoster(); renderRoster(); showToast('已加入球員名單');
+  }
+
+  // Replace modal renderer while keeping existing batting data unchanged.
+  function openModal(id) {
+    currentModalPlayerId = id;
+    activePlayerStatTab = 'batting';
+    const p = findPlayerById(id);
+    if (!p) return;
+    if (!p.records) p.records=[];
+    if (!p.pitchingRecords) p.pitchingRecords=[];
+
+    document.getElementById('modalNumberInput').value = p.number || '';
+    document.getElementById('modalNameInput').value = p.name || '';
+    document.getElementById('primaryPosSelect').innerHTML = positionOptions(p.primary,true);
+    document.getElementById('secondaryPosSelect').innerHTML = positionOptions(p.secondary,true);
+    document.getElementById('recordDate').value = todayStr();
+    document.getElementById('pitchRecordDate').value = todayStr();
+    ['rec1B','rec2B','rec3B','recHR','recBB','recE','recFC','recOuts'].forEach(id2 => {
+      const el=document.getElementById(id2); if(el) el.value=0;
+    });
+    resetPitchInputs();
+    renderModalSummary(p);
+    renderRecordList(p);
+    renderPitchingSummary(p);
+    renderPitchingRecordList(p);
+    switchPlayerStatTab('batting');
+    document.getElementById('modalOverlay').classList.add('show');
+  }
+
+  // Show batting "career" and historical record terminology clearly.
+  function renderModalSummary(p) {
+    const s = computeStats(p);
+    document.getElementById('modalSummary').innerHTML = `
+      <div style="font-weight:800;color:var(--brand-blue-dark);margin-bottom:4px;">Career Record</div>
+      打擊率 <b>${fmt3(s.avg)}</b>　上壘率 <b>${fmt3(s.obp)}</b>　長打率 <b>${fmt3(s.slg)}</b><br>
+      安打:${s.hits}（1B ${s.singles}/2B ${s.doubles}/3B ${s.triples}/HR ${s.hr}）　BB:${s.bb}<br>
+      失誤:${s.errors}　野選:${s.fc}　出局:${s.outs}　打數:${s.ab}`;
+  }
+
+  function renderRecordList(p) {
+    const container = document.getElementById('recordList');
+    const records = [...(p.records || [])].sort((a,b) => String(b.date).localeCompare(String(a.date)));
+    if (!records.length) { container.innerHTML='<p style="color:#8e8e93;font-size:13px;">尚無歷史打擊紀錄</p>'; return; }
+    container.innerHTML = records.map(r => {
+      const idx=p.records.indexOf(r);
+      return `<div class="record-item">
+        <div><div>${escapeHtml(r.date||'')}</div>
+        <div style="color:#636366;margin-top:2px;">1B${r.singles||0} 2B${r.doubles||0} 3B${r.triples||0} HR${r.hr||0} BB${r.bb||0} E${r.errors||0} FC${r.fc||0} Out${r.outs||0}</div></div>
+        <button class="rec-del" onclick="deleteRecord(${idx})">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  function deleteRecord(index) {
+    const p=findPlayerById(currentModalPlayerId);
+    if (!p) return;
+    p.records.splice(Number(index),1);
+    saveRoster(); renderModalSummary(p); renderRecordList(p);
+  }
+
+
 
 </script>
 
