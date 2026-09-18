@@ -769,8 +769,8 @@
             <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-09-16</span>
           </div>
           <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13.5px; color: #1c1c1e; line-height: 1.7;">
-            <li>🔹 <b>全新美式雙場次戰報</b>：選單新增「今日賽後戰報」，一鍵交叉提取 Schedule 與 Box 雙場次數據進行高畫質 Canvas 圖表渲染。</li>
-            <li>🔹 <b>MVP 機制</b>：除了系統智慧推算敲最多安打的 MVP，並開放領隊於戰報面板內直接打字與手動套用覆蓋。</li>
+            <li>🔹 <b>全新美式雙場次戰報</b>：選單新增「今日賽後戰報」，可一鍵交叉提取 Schedule 與 Box 雙場次數據進行高畫質 Canvas 圖表渲染。</li>
+            <li>🔹 <b>手動微調 MVP 機制</b>：除了系統智慧推算敲最多安打的 MVP，並開放領隊於戰報面板內直接打字與手動套用覆蓋。</li>
             <li>🔹 <b>行動裝置主畫面圖示支援</b>：全面最佳化 iOS 與 Android 加入主畫面設定，使自訂 `ait-logo.jpg` 桌面圖示能完美呈現。</li>
             <li>🔹 <b>賽程時間防錯修復</b>：全面修正賽程表（Schedule）因載入時序產生的變數死結，還原經典的雙比分與時間對齊排版。</li>
           </ul>
@@ -785,7 +785,7 @@
           </div>
           <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13px; color: #48484a; line-height: 1.6;">
             <li>🔹 <b>LINE 打序智慧匯入</b>：新增智慧分析輸入框，支援將 LINE 聊天室內容複製貼上自動過濾、解析並一鍵匯入當日打序。</li>
-            <li>🔹 <b>即時紀錄器</b>：計分板介面右側新增壞球、好球、出局數（Ball/Strike/Out）點擊燈號，並綁定滿三出局防誤觸換局 Toast 提示。</li>
+            <li>🔹 <b>即時 BSO 紀錄器</b>：計分板介面右側新增壞球、好球、出局數（Ball/Strike/Out）點擊燈號，並綁定滿三出局防誤觸換局 Toast 提示。</li>
           </ul>
         </div>
 
@@ -796,8 +796,8 @@
             <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-01-10</span>
           </div>
           <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13px; color: #48484a; line-height: 1.6;">
-            <li>🔹 <b>AIT Softball 雲端資料庫上線</b>：打通多網頁多端即時同步數據。</li>
-            <li>🔹 <b>守備位置視覺化熱區</b>：提供直覺的棒球場守備位置拖拉與晶片化分配顯示面板。</li>
+            <li>🔹 <b>AIT Softball 雲端資料庫上線</b>：全面接軌 Firebase Firestore 異步快照同步層，打通多網頁多端即時同步數據。</li>
+            <li>🔹 <b>守備位置視覺化熱區</b>：打序分頁下方提供直覺的棒球場九人守備位置拖拉與晶片化分配顯示面板。</li>
           </ul>
         </div>
   </div>
@@ -1273,21 +1273,28 @@
       if (menuItemFloating) menuItemFloating.textContent = isAdminLoggedIn ? '✏️ 登出' : '🔐 登入';
     });
 
-    onSnapshot(teamRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        roster = data.roster || [];
-        rosterSort = data.rosterSort || 'custom';
-        lineups = data.lineups || { game1: [], game2: [] };
-        boxScore = data.boxScore || {};
-        schedule = data.schedule || { matches: [] };
-        leagueStandings = data.leagueStandings || getDefaultLeagueStandings();
-      } else {
-        roster = []; rosterSort = 'custom'; lineups = { game1: [], game2: [] }; boxScore = {};
-        schedule = { matches: getDefaultScheduleMatches() };
-        leagueStandings = getDefaultLeagueStandings();
-        saveAllToFirebase();
-      }
+onSnapshot(teamRef, (docSnap) => {
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    roster = data.roster || [];
+    rosterSort = data.rosterSort || 'custom';
+    lineups = data.lineups || { game1: [], game2: [] };
+    boxScore = data.boxScore || {};
+    schedule = data.schedule || { matches: [] };
+    leagueStandings = data.leagueStandings || getDefaultLeagueStandings();
+  } else {
+    // 雲端真的沒有這份文件時，只在記憶體建立預設值，絕對「不要」呼叫 saveAllToFirebase()
+    roster = []; 
+    rosterSort = 'custom'; 
+    lineups = { game1: [], game2: [] }; 
+    boxScore = {};
+    schedule = { matches: getDefaultScheduleMatches() };
+    leagueStandings = getDefaultLeagueStandings();
+    
+    console.warn("Firestore 找不到文件，已套用預設值（尚未寫入雲端）");
+    // ❌ 刪除這一行：saveAllToFirebase(); 
+  }
+
 
       if (!firebaseReady) {
         firebaseReady = true;
@@ -3521,7 +3528,7 @@ function renderPitchingRecordList(p) {
 
 
 <!-- ==================================================================
-     📸 戰報組件外殼與手動編輯區
+     📸 戰報組件外殼與手動編輯區 (直接貼在 </body> 上方)
      ================================================================== -->
 <div id="reportModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.94); z-index:9999; align-items:center; justify-content:center; flex-direction:column; gap:12px; padding:16px;">
   
