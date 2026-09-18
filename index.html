@@ -1,6 +1,63 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+
+<style>
+details.year-group {
+  margin-bottom: 12px;
+  border: 1px solid #e5e5ea;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+/* 2. 折疊標題列 (summary) */
+summary.year-header {
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1c1e;
+  background-color: #f2f2f7;
+  cursor: pointer;
+  user-select: none;
+  list-style: none; /* 隱藏 Safari 原生箭頭 (可選) */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 針對 Chrome / Edge 隱藏原生三角形 (可選) */
+summary.year-header::-webkit-details-marker {
+  display: none;
+}
+
+/* 3. 在標題右側加一個展開/折疊小箭頭圖示 */
+summary.year-header::after {
+  content: "❯";
+  font-size: 12px;
+  color: #8e8e93;
+  transition: transform 0.2s ease;
+}
+
+/* 展開時將箭頭旋轉 90 度 */
+details.year-group[open] summary.year-header::after {
+  transform: rotate(90deg);
+}
+
+/* 4. 折疊內部的列表容器 */
+.year-content {
+  padding: 8px 12px;
+}
+
+/* 5. 確保內部的每一筆紀錄保持間距 */
+.year-content .record-item {
+  border-bottom: 1px solid #f2f2f7;
+}
+.year-content .record-item:last-child {
+  border-bottom: none;
+}
+</style>
+
 <link rel="apple-touch-icon" href="/path/to/ait-logo.jpg">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -756,8 +813,9 @@
           <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13.5px; color: #1c1c1e; line-height: 1.7;">
 			<li>🔸 <b>ios開啟網頁後，點擊"分享"加入"主頁面"可快速進入AIT系統</b></li>
             <li>🔸 <b>戰績表系統</b>：選單新增STANDING「聯盟戰績」與「對戰戰績」，詳列AIT與聯盟內球隊對戰紀錄。</li>
-            <li>🔸 <b>引入投球紀錄</b>：ROSTER內也可以切換投手資料與歷年紀錄2 WAY PLAYER</li>
+            <li>🔸 <b>二刀流開啟</b>：ROSTER內也可以切換投手資料與歷年紀錄2 WAY PLAYER</li>
             <li>🔸 <b>SCHEDULE優化排序功能</b>：預設本月份與未來月份賽程資料，避免全年資料霧颯颯</li>
+			<li>🔸 <b>折疊過去紀錄</b>：優化歷史紀錄功能</li>
             <li>🔸 <b>頁面優化</b>：例行頁面優化，最適手機排版功能。</li>
           </ul>
         	</div>  
@@ -1166,7 +1224,7 @@
           <div><label>投球局 IP</label><input type="number" min="0" step="0.1" id="pitchIP" value="0" /></div>
           <div><label>勝投 W</label><input type="number" min="0" id="pitchW" value="0" /></div>
           <div><label>敗投 L</label><input type="number" min="0" id="pitchL" value="0" /></div>
-          <div><label>中繼/救援 HLD/SV</label><input type="number" min="0" id="pitchHLD" value="0" /></div>
+          <div><label>救援 SV</label><input type="number" min="0" id="pitchSV" value="0" /></div>
         </div>
         <div class="stat-input-row pitching-simple-row">
           <div><label>四壞 BB</label><input type="number" min="0" id="pitchBB" value="0" /></div>
@@ -1174,7 +1232,7 @@
           <div><label>失分 R</label><input type="number" min="0" id="pitchR" value="0" /></div>
           <div><label>責失 ER</label><input type="number" min="0" id="pitchER" value="0" /></div>
         </div>
-        <button class="btn-add" style="width:100%;margin-top:12px;" onclick="savePitchingRecord()">新增投球紀錄</button>
+        <button class="btn-add" style="width:100%;margin-top:12px;" onclick="savePitchingRecord()">新增紀錄</button>
       </div>
     </div>
   </div>
@@ -1600,73 +1658,91 @@ onSnapshot(teamRef, (docSnap) => {
   function renderModalSummary(p) {
     const s = computeStats(p);
     document.getElementById('modalSummary').innerHTML = `
-      打擊率 <b>${fmt3(s.avg)}</b> 上壘率 <b>${fmt3(s.obp)}</b> 長打率 <b>${fmt3(s.slg)}</b><br>
-      安打:${s.hits}(1B ${s.singles}/2B ${s.doubles}/3B ${s.triples}/HR ${s.hr}) BB:${s.bb} <br>
-	失誤:${s.errors} 野選:${s.fc} 出局:${s.outs} 打數:${s.ab}
+      打擊率: <b>${fmt3(s.avg)}</b> 上壘率: <b>${fmt3(s.obp)}</b> 長打率: <b>${fmt3(s.slg)}</b><br>
+	打數:<b>${s.ab}</b> 安打:<b>${s.hits}</b> HR: <b>${s.hr})</b> BB: <b>${s.bb} </b>失誤: <b>${s.errors}</b> 野選: <b>${s.fc} </b>出局: <b>${s.outs} </b>
     `;
   }
 
 function renderRecordList(p) {
-
   const container = document.getElementById('recordList');
-
-  const records = [...(p.records || [])]
-    .sort((a, b) =>
-      String(b.date).localeCompare(String(a.date))
-    );
+  
+  // 1. 複製並依日期降序排序
+  const records = [...(p.records || [])].sort((a, b) =>
+    String(b.date).localeCompare(String(a.date))
+  );
 
   if (!records.length) {
-
     container.innerHTML = `
       <p style="color:#8e8e93;font-size:13px;">
         尚無歷史打擊紀錄
       </p>
     `;
-
     return;
   }
 
-  container.innerHTML = records.map(record => {
+  // 2. 按年份進行群組化 (Group by Year)
+  const groupedByYear = records.reduce((groups, record) => {
+    // 假設 date 格式為 'YYYY-MM-DD' 或包含四位數年份
+    const year = record.date ? String(record.date).substring(0, 4) : '未知年份';
+    if (!groups[year]) {
+      groups[year] = [];
+    }
+    groups[year].push(record);
+    return groups;
+  }, {});
 
-    const index = p.records.indexOf(record);
+  // 3. 取得所有年份並降序排列 (最新年份在最上面)
+  const years = Object.keys(groupedByYear).sort((a, b) => b.localeCompare(a));
+
+  // 4. 渲染 HTML (使用 <details> 實現原生折疊效果)
+  container.innerHTML = years.map((year, yearIndex) => {
+    const yearRecords = groupedByYear[year];
+
+    const recordsHtml = yearRecords.map(record => {
+      // ⚠️ 正確找回原陣列 p.records 中的索引，確保刪除功能正常
+      const index = p.records.indexOf(record);
+
+      return `
+        <div class="record-item">
+          <div class="record-main">
+            <div class="record-date">
+              ${escapeHtml(record.date || '')}
+            </div>
+            <div class="record-stats">
+		1B:	${record.singles || 0}
+		2B:	${record.doubles || 0}
+		3B:	${record.triples || 0}
+		HR:	${record.hr || 0}
+		BB:	${record.bb || 0}
+		E:	${record.errors || 0}
+		FC:	${record.fc || 0}
+		Out:	${record.outs || 0}
+            </div>
+          </div>
+          <button
+            class="rec-del"
+            onclick="deleteRecord(${index})">
+            ✕
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    // 第一個年份預設展開 (open)，其餘折疊
+    const isOpen = yearIndex === 0 ? 'open' : '';
 
     return `
-      <div class="record-item">
-
-        <div class="record-main">
-
-          <div class="record-date">
-            ${escapeHtml(record.date || '')}
-          </div>
-
-          <div class="record-stats">
-            1B${record.singles || 0}
-            　2B${record.doubles || 0}
-            　3B${record.triples || 0}
-            　HR${record.hr || 0}
-          </div>
-
-          <div class="record-stats">
-            BB${record.bb || 0}
-            　E${record.errors || 0}
-            　FC${record.fc || 0}
-            　Out${record.outs || 0}
-          </div>
-
+      <details class="year-group" ${isOpen}>
+        <summary class="year-header">
+          <span>${escapeHtml(year)} 年 (${yearRecords.length} 筆紀錄)</span>
+        </summary>
+        <div class="year-content">
+          ${recordsHtml}
         </div>
-
-        <button
-          class="rec-del"
-          onclick="deleteRecord(${index})">
-          ✕
-        </button>
-
-      </div>
+      </details>
     `;
-
   }).join('');
 }
-
 
 
   function saveRecord() {
@@ -3220,17 +3296,17 @@ function formatPitchingSummary(s) {
   return `
      <div style="font-weight:800;color:var(--brand-blue-dark);margin-bottom:4px;">Career Record</div>
 
-    投球局IP <b>${s.ip.toFixed(1)}</b>
-   　勝投W <b>${s.w}</b>
-   　敗投L <b>${s.l}</b>
-   　中繼/救援HLD/SV <b>${s.hld}</b><br>
-	四壞BB <b>${s.bb}</b>
-   　三振SO <b>${s.so}</b>
-   　失分R <b>${s.r}</b>
-   　責失ER <b>${s.er}</b>
+    	局數IP:	<b>${s.ip.toFixed(1)}</b>
+	防禦率ERA:	<b>${s.era}</b>
+	勝投W:	<b>${s.w}</b>
+   　敗投L:	<b>${s.l}</b>
+   　救援SV:	<b>${s.sv}</b><br>
+	SO:	<b>${s.so}</b>
+	BB:	<b>${s.bb}</b>
+	R:	<b>${s.r}</b>
+	ER:	<b>${s.er}</b>
   `;
 }
-FC
 
   function switchPlayerStatTab(tab) {
     activePlayerStatTab = tab === 'pitching' ? 'pitching' : 'batting';
@@ -3251,15 +3327,12 @@ FC
 
 
 function renderPitchingRecordList(p) {
-
-  const container = document.getElementById('pitchingRecordList');
-
-  if (!container) return;
-
-  const records = [...(p.pitchingRecords || [])]
-    .sort((a, b) =>
-      String(b.date).localeCompare(String(a.date))
-    );
+  const container = document.getElementById('pitchingRecordList'); // 請依實際 DOM ID 調整
+  
+  // 1. 複製並依日期降序排序
+  const records = [...(p.pitchingRecords || p.records || [])].sort((a, b) =>
+    String(b.date).localeCompare(String(a.date))
+  );
 
   if (!records.length) {
     container.innerHTML = `
@@ -3270,93 +3343,66 @@ function renderPitchingRecordList(p) {
     return;
   }
 
-  /* 依年份分類 */
-  const years = {};
-
-  records.forEach(r => {
-    const year =
-      String(r.date || '').slice(0, 4) || '其他';
-
-    if (!years[year]) {
-      years[year] = [];
+  // 2. 按年份進行群組化 (Group by Year)
+  const groupedByYear = records.reduce((groups, record) => {
+    const year = record.date ? String(record.date).substring(0, 4) : '未知年份';
+    if (!groups[year]) {
+      groups[year] = [];
     }
+    groups[year].push(record);
+    return groups;
+  }, {});
 
-    years[year].push(r);
-  });
+  // 3. 取得所有年份並降序排列
+  const years = Object.keys(groupedByYear).sort((a, b) => b.localeCompare(a));
 
-  container.innerHTML = Object.keys(years)
-    .sort((a, b) => b.localeCompare(a))
-    .map(year => {
+  // 4. 渲染 HTML
+  container.innerHTML = years.map((year, yearIndex) => {
+    const yearRecords = groupedByYear[year];
 
-      const yearRecords = years[year];
-
-      /* 計算該年度累計 */
-      const total = computePitchingStats({
-        pitchingRecords: yearRecords
-      });
+    const recordsHtml = yearRecords.map(record => {
+      // 正確找回在原本陣列中的索引，確保刪除功能正常
+      const originalArray = p.pitchingRecords || p.records;
+      const index = originalArray.indexOf(record);
 
       return `
-        <div class="history-year-group">
-
-          <div class="history-year-title">
-            ${escapeHtml(year)}
+        <div class="record-item">
+          <div class="record-main">
+            <div class="record-date">
+              ${escapeHtml(record.date || '')}
+            </div>
+            <div class="record-stats">
+		IP:	${record.ip || 0}
+		W:	${record.w || 0}
+		L:	${record.l || 0}
+		SV:	${record.sv || 0}
+		SO:	${record.so || 0}            
+		BB:	${record.bb || 0}
+		 R:	${record.r || 0}
+		ER:	${record.er || 0}
+            </div>
           </div>
-
-          <div class="history-year-summary">
-            IP ${total.ip.toFixed(1)}
-            　W ${total.w}
-            　L ${total.l}
-            　HLD ${total.hld}
-            　BB ${total.bb}
-            　SO ${total.so}
-            　R ${total.r}
-            　ER ${total.er}
-          </div>
-
-          ${yearRecords.map(record => {
-
-            const index =
-              p.pitchingRecords.indexOf(record);
-
-            return `
-              <div class="record-item">
-
-                <div class="record-main">
-
-                  <div class="record-date">
-                    ${escapeHtml(record.date || '')}
-                  </div>
-
-                  <div class="record-stats">
-                    IP ${Number(record.ip || 0).toFixed(1)}
-                    　W ${Number(record.w || 0)}
-                    　L ${Number(record.l || 0)}
-                    　HLD ${Number(record.hld || 0)}
-                    BB ${Number(record.bb || 0)}
-                    　SO ${Number(record.so || 0)}
-                    　R ${Number(record.r || 0)}
-                    　ER ${Number(record.er || 0)}
-                  </div>
-
-                </div>
-
-                <button
-                  class="rec-del"
-                  onclick="deletePitchingRecord(${index})">
-                  ✕
-                </button>
-
-              </div>
-            `;
-
-          }).join('')}
-
+          <button
+            class="rec-del"  onclick="deletePitchingRecord(${index})"> ✕</button>
         </div>
       `;
-
     }).join('');
-}
 
+    // 第一個年份預設展開 (open)，其餘折疊
+    const isOpen = yearIndex === 0 ? 'open' : '';
+
+    return `
+      <details class="year-group" ${isOpen}>
+        <summary class="year-header">
+          <span>${escapeHtml(year)} 年 (${yearRecords.length} 筆投球紀錄)</span>
+        </summary>
+        <div class="year-content">
+          ${recordsHtml}
+        </div>
+      </details>
+    `;
+  }).join('');
+}
 
   function resetPitchInputs() {
     ['pitchIP','pitchH','pitchR','pitchER','pitchBB','pitchSO','pitchHR','pitchW','pitchL','pitchSV','pitchHLD']
@@ -3434,8 +3480,8 @@ function renderPitchingRecordList(p) {
         </div>
         ${inLineup ? `<span class="roster-badge">第${activeGame===1?'一':'二'}場</span>` : ''}
         <div class="roster-stats roster-dual-stats">
-          <div>BAT ${fmt3(b.avg)}</div>
-          <div>PIT ${pit.ip > 0 ? 'ERA '+pit.era.toFixed(2) : '—'}</div>
+          <div>AVG${fmt3(b.avg)}</div>
+          <div>${pit.ip > 0 ? 'ERA '+pit.era.toFixed(2):'' }</div>
         </div>
         <button class="roster-trash" onclick="deleteFromRoster('${p.id}')">🗑</button>`;
       container.appendChild(li);
@@ -3488,29 +3534,19 @@ function renderPitchingRecordList(p) {
     const s = computeStats(p);
     document.getElementById('modalSummary').innerHTML = `
       <div style="font-weight:800;color:var(--brand-blue-dark);margin-bottom:4px;">Career Record</div>
-      	打擊率 <b>${fmt3(s.avg)}</b>　
-	上壘率 <b>${fmt3(s.obp)}</b>　
-	長打率 <b>${fmt3(s.slg)}</b><br>
-      安打:<b>${s.hits}</b>（1B ${s.singles}/2B ${s.doubles}/3B ${s.triples}/HR ${s.hr}）　四壞BB:<b>${s.bb}</b><br>
-      失誤:<b>${s.errors}</b>　
-	野選:<b>${s.fc}　</b>
-	出局:<b>${s.outs}</b>　
-	打數:<b>${s.ab}</b>`;
+      	打擊率AVG <b>${fmt3(s.avg)}</b>　
+	上壘率OBP <b>${fmt3(s.obp)}</b>　
+	長打率SLG <b>${fmt3(s.slg)}</b><br>
+      	AB: <b>${s.ab}</b>
+	Hit: <b>${s.hits}</b>
+	HR:  <b>${s.hr}</b>
+	BB: <b>${s.bb}</b>
+      	E: <b>${s.errors}</b>
+	FC: <b>${s.fc}</b>
+	Out: <b>${s.outs}</b>
+	`;
   }
 
-  function renderRecordList(p) {
-    const container = document.getElementById('recordList');
-    const records = [...(p.records || [])].sort((a,b) => String(b.date).localeCompare(String(a.date)));
-    if (!records.length) { container.innerHTML='<p style="color:#8e8e93;font-size:13px;">尚無歷史打擊紀錄</p>'; return; }
-    container.innerHTML = records.map(r => {
-      const idx=p.records.indexOf(r);
-      return `<div class="record-item">
-        <div><div>${escapeHtml(r.date||'')}</div>
-        <div style="color:#636366;margin-top:2px;">1B${r.singles||0} 2B${r.doubles||0} 3B${r.triples||0} HR${r.hr||0} BB${r.bb||0} E${r.errors||0} FC${r.fc||0} Out${r.outs||0}</div></div>
-        <button class="rec-del" onclick="deleteRecord(${idx})">✕</button>
-      </div>`;
-    }).join('');
-  }
 
   function deleteRecord(index) {
     const p=findPlayerById(currentModalPlayerId);
