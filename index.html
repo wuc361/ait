@@ -492,7 +492,7 @@
      ================================================================== */
   .news-hero {
     width: 100%; height: 180px; border-radius: 14px; margin-bottom: 12px;
-    background-image: url('images/ait-cover.jpg'); /* 請替換成實際圖片路徑或 URL */
+    background-image: url('images/ait-cover.jpg'); /* 可以替換首頁，請替換成實際圖片路徑或 URL */
     background-size: cover; background-position: center; background-color: #d1d1d6;
     box-shadow: 0 2px 10px rgba(0,0,0,0.15);
   }
@@ -596,7 +596,6 @@
   .match-score-display input {
     width: 40px; padding: 5px 2px; text-align: center; border: 1px solid #d1d1d6; border-radius: 6px; font-size: 14px;
   }
-
 
   /* ==================================================================
      🟨 SECTION 5：戰績表 / RECORDS
@@ -735,7 +734,7 @@
           <iframe src="https://stats.cpbl.com.tw/schedule" loading="lazy" referrerpolicy="no-referrer"></iframe>
         </div>
         <a class="cpbl-fallback-link" href="https://stats.cpbl.com.tw/schedule" target="_blank" rel="noopener">
-          若上方畫面空白無法顯示，請點此在新分頁開啟中職官網賽程
+          新分頁開啟中職官網賽程
         </a>
       </div>
     </div>
@@ -746,7 +745,7 @@
     <!-- ============================================================= -->
     <h2 style="margin-top:24px; border-left: 4px solid #34c759;">System Updates & Changelog</h2>
     <div class="roster-panel" style="background: #ffffff; padding: 14px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px;">
-      <div style="max-height: 240px; overflow-y: auto; padding-right: 4px;">
+    <div style="max-height: 240px; overflow-y: auto; padding-right: 4px;">
          
  <!-- 🔥 當前最新版本 -->
 <div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px;">
@@ -755,6 +754,7 @@
 <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-09-16</span>
           </div>
           <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13.5px; color: #1c1c1e; line-height: 1.7;">
+			<li>🔸 <b>ios開啟網頁後，點擊"分享"加入"主頁面"可快速進入AIT系統</b></li>
             <li>🔸 <b>戰績表系統</b>：選單新增STANDING「聯盟戰績」與「對戰戰績」，詳列AIT與聯盟內球隊對戰紀錄。</li>
             <li>🔸 <b>引入投球紀錄</b>：ROSTER內也可以切換投手資料與歷年紀錄2 WAY PLAYER</li>
             <li>🔸 <b>SCHEDULE優化排序功能</b>：預設本月份與未來月份賽程資料，避免全年資料霧颯颯</li>
@@ -763,21 +763,18 @@
         	</div>  
     
         <!-- 歷史版本 3 -->
-            <div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px; opacity: 0.85;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-            <span style="background: #f0f0f2; color: #636366; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">v2.1.0</span>
-            <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-09-16</span>
-          </div>
+        <div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px; opacity: 0.85;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+        <span style="background: #f0f0f2; color: #636366; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">v2.1.0</span>
+        <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-09-16</span>
+        </div>
           <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13.5px; color: #1c1c1e; line-height: 1.7;">
             <li>🔹 <b>全新美式雙場次戰報</b>：選單新增「今日賽後戰報」，可一鍵交叉提取 Schedule 與 Box 雙場次數據進行高畫質 Canvas 圖表渲染。</li>
-            <li>🔹 <b>手動微調 MVP 機制</b>：除了系統智慧推算敲最多安打的 MVP，並開放領隊於戰報面板內直接打字與手動套用覆蓋。</li>
-            <li>🔹 <b>行動裝置主畫面圖示支援</b>：全面最佳化 iOS 與 Android 加入主畫面設定，使自訂 `ait-logo.jpg` 桌面圖示能完美呈現。</li>
-            <li>🔹 <b>賽程時間防錯修復</b>：全面修正賽程表（Schedule）因載入時序產生的變數死結，還原經典的雙比分與時間對齊排版。</li>
-          </ul>
+             <li>🔹 <b>行動裝置主畫面圖示支援</b>：全面最佳化 iOS 與 Android 加入主畫面設定。</li>
+        </ul>
         </div>
 
         <!-- 歷史版本 2 -->
-
         <div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px; opacity: 0.85;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
             <span style="background: #f0f0f2; color: #636366; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">v1.5.0</span>
@@ -785,7 +782,7 @@
           </div>
           <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13px; color: #48484a; line-height: 1.6;">
             <li>🔹 <b>LINE 打序智慧匯入</b>：新增智慧分析輸入框，支援將 LINE 聊天室內容複製貼上自動過濾、解析並一鍵匯入當日打序。</li>
-            <li>🔹 <b>即時 BSO 紀錄器</b>：計分板介面右側新增壞球、好球、出局數（Ball/Strike/Out）點擊燈號，並綁定滿三出局防誤觸換局 Toast 提示。</li>
+            <li>🔹 <b>即時紀錄器</b>：計分板介面右側新增壞球、好球、出局數點擊燈號。</li>
           </ul>
         </div>
 
@@ -796,8 +793,8 @@
             <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-01-10</span>
           </div>
           <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13px; color: #48484a; line-height: 1.6;">
-            <li>🔹 <b>AIT Softball 雲端資料庫上線</b>：全面接軌 Firebase Firestore 異步快照同步層，打通多網頁多端即時同步數據。</li>
-            <li>🔹 <b>守備位置視覺化熱區</b>：打序分頁下方提供直覺的棒球場九人守備位置拖拉與晶片化分配顯示面板。</li>
+            <li>🔹 <b>AIT Softball 雲端資料庫上線</b>：全面接軌 Firebase，打通多網頁多端即時同步數據。</li>
+            <li>🔹 <b>守備位置視覺化熱區</b>：直覺式球場守備位置拖拉與晶片化分配顯示面板。</li>
           </ul>
         </div>
   </div>
