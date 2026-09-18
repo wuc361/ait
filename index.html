@@ -626,10 +626,12 @@
   .player-stat-tabs { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:10px 0 12px; }
   .player-stat-tab { background:#e5e5ea; color:#48484a; font-weight:800; padding:10px 6px; border-radius:9px; font-size:13px; }
   .player-stat-tab.active { background:var(--brand-blue); color:#fff; }
-  .pitching-record { background:#fff; border-radius:10px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:12px; }
+  
+.pitching-record { background:#fff; border-radius:10px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:12px; }
   .pitching-record .pitch-main { line-height:1.65; }
   .pitching-record .pitch-date { font-weight:800; color:var(--brand-blue-dark); }
   .pitching-record .rec-del { flex-shrink:0; }
+
   @media (max-width:600px){
     body { padding-left:8px; padding-right:8px; }
     h1 { font-size:20px; }
@@ -745,22 +747,37 @@
     <h2 style="margin-top:24px; border-left: 4px solid #34c759;">System Updates & Changelog</h2>
     <div class="roster-panel" style="background: #ffffff; padding: 14px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px;">
       <div style="max-height: 240px; overflow-y: auto; padding-right: 4px;">
-        
-        <!-- 🔥 當前最新版本 (含近期自訂主畫面與雙場次戰報功能) -->
-        <div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-            <span style="background: #e3f7e6; color: #1a7a2e; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">v2.1.0 (Current)</span>
+         
+ <!-- 🔥 當前最新版本 -->
+<div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px;">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+<span style="background: #e3f7e6; color: #1a7a2e; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">v2.2.2 (Current)</span>
+<span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-09-16</span>
+          </div>
+          <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13.5px; color: #1c1c1e; line-height: 1.7;">
+            <li>🔸 <b>戰績表系統</b>：選單新增STANDING「聯盟戰績」與「對戰戰績」，詳列AIT與聯盟內球隊對戰紀錄。</li>
+            <li>🔸 <b>引入投球紀錄</b>：ROSTER內也可以切換投手資料與歷年紀錄2 WAY PLAYER</li>
+            <li>🔸 <b>SCHEDULE優化排序功能</b>：預設本月份與未來月份賽程資料，避免全年資料霧颯颯</li>
+            <li>🔸 <b>頁面優化</b>：例行頁面優化，最適手機排版功能。</li>
+          </ul>
+        	</div>  
+    
+        <!-- 歷史版本 3 -->
+        <    <div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px; opacity: 0.85;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+            <span style="background: #f0f0f2; color: #636366; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">v2.1.0</span>
             <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-09-16</span>
           </div>
           <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13.5px; color: #1c1c1e; line-height: 1.7;">
-            <li>🔸 <b>全新美式雙場次戰報</b>：選單新增「今日賽後戰報」，可一鍵交叉提取 Schedule 與 Box 雙場次數據進行高畫質 Canvas 圖表渲染。</li>
-            <li>🔸 <b>手動微調 MVP 機制</b>：除了系統智慧推算敲最多安打的 MVP，並開放領隊於戰報面板內直接打字與手動套用覆蓋。</li>
-            <li>🔸 <b>行動裝置主畫面圖示支援</b>：全面最佳化 iOS 與 Android 加入主畫面設定，使自訂 `ait-logo.jpg` 桌面圖示能完美呈現。</li>
-            <li>🔸 <b>賽程時間防錯修復</b>：全面修正賽程表（Schedule）因載入時序產生的變數死結，還原經典的雙比分與時間對齊排版。</li>
+            <li>🔹 <b>全新美式雙場次戰報</b>：選單新增「今日賽後戰報」，可一鍵交叉提取 Schedule 與 Box 雙場次數據進行高畫質 Canvas 圖表渲染。</li>
+            <li>🔹 <b>手動微調 MVP 機制</b>：除了系統智慧推算敲最多安打的 MVP，並開放領隊於戰報面板內直接打字與手動套用覆蓋。</li>
+            <li>🔹 <b>行動裝置主畫面圖示支援</b>：全面最佳化 iOS 與 Android 加入主畫面設定，使自訂 `ait-logo.jpg` 桌面圖示能完美呈現。</li>
+            <li>🔹 <b>賽程時間防錯修復</b>：全面修正賽程表（Schedule）因載入時序產生的變數死結，還原經典的雙比分與時間對齊排版。</li>
           </ul>
         </div>
 
         <!-- 歷史版本 2 -->
+
         <div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px; opacity: 0.85;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
             <span style="background: #f0f0f2; color: #636366; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">v1.5.0</span>
@@ -969,7 +986,7 @@
   <!-- 🟨 RECORDS / 戰績表 分頁 -->
   <!-- ============================================================= -->
   <div id="pageRecords" class="main-page">
-    <h2>STANDING</h2>
+    <h2>STANDINGS</h2>
 
     <section class="records-card">
       <div class="records-card-title">
@@ -1001,7 +1018,7 @@
       <div class="records-table-wrap">
         <table class="records-table league-table">
           <thead>
-            <tr><th>球隊</th><th>已賽</th><th>勝</th><th>敗</th><th>平</th><th>勝率</th><th></th></tr>
+            <tr><th>名次</th><tr><th>球隊</th><th>已賽</th><th>勝</th><th>敗</th><th>平</th><th>勝率</th><th></th></tr>
           </thead>
           <tbody id="leagueStandingsBody"></tbody>
         </table>
@@ -1107,7 +1124,7 @@
 
     <!-- 1. 歷史紀錄 -->
     <div class="modal-history">
-      <h3>2026 Regular Season</h3>
+      <h3>Regular Season</h3>
       <div id="recordList"></div>
     </div>
 
@@ -1140,7 +1157,7 @@
       <div class="modal-summary" id="pitchingSummary"></div>
 
       <div class="modal-history">
-        <h3>2026 Regular Season</h3>
+        <h3>Regular Season</h3>
         <div id="pitchingRecordList"></div>
       </div>
 
@@ -1152,7 +1169,7 @@
           <div><label>投球局 IP</label><input type="number" min="0" step="0.1" id="pitchIP" value="0" /></div>
           <div><label>勝投 W</label><input type="number" min="0" id="pitchW" value="0" /></div>
           <div><label>敗投 L</label><input type="number" min="0" id="pitchL" value="0" /></div>
-          <div><label>中繼 HLD</label><input type="number" min="0" id="pitchHLD" value="0" /></div>
+          <div><label>中繼/救援 HLD/SV</label><input type="number" min="0" id="pitchHLD" value="0" /></div>
         </div>
         <div class="stat-input-row pitching-simple-row">
           <div><label>四壞 BB</label><input type="number" min="0" id="pitchBB" value="0" /></div>
@@ -1221,9 +1238,7 @@
   <button class="main-menu-item" data-page="roster" onclick="selectMainPage('roster')">👤 ROSTER</button>
   <button class="main-menu-item" data-page="lineup" onclick="selectMainPage('lineup')">📋 LINE UP</button>
   <button class="main-menu-item" data-page="score" onclick="selectMainPage('score')">🧮 SCORES</button>
-  <button class="main-menu-item" data-page="records" onclick="selectMainPage('records')">🏆 戰績表</button>
-  <div class="main-menu-divider"></div>
-
+  <button class="main-menu-item" data-page="records" onclick="selectMainPage('records')">🏆 STANDINGS</button>
 </div>
 
 <div id="fieldGhost"></div>
@@ -1586,22 +1601,69 @@
 	失誤:${s.errors} 野選:${s.fc} 出局:${s.outs} 打數:${s.ab}
     `;
   }
-  function renderRecordList(p) {
-    const container = document.getElementById('recordList');
-    const records = [...(p.records || [])].sort((a,b) => b.date.localeCompare(a.date));
-    if (records.length === 0) { container.innerHTML = '<p style="color:#8e8e93;font-size:13px;">尚無紀錄</p>'; return; }
-    container.innerHTML = records.map(r => {
-      const realIndex = p.records.indexOf(r);
-      return `
-        <div class="record-item">
-          <div>
-            <div>${r.date}</div>
-            <div style="color:#636366;margin-top:2px;">1B${r.singles} 2B${r.doubles} 3B${r.triples} HR${r.hr} BB${r.bb} E${r.errors||0} FC${r.fc||0} Out${r.outs}</div>
-          </div>
-          <button class="rec-del" onclick="deleteRecord('${realIndex}')">✕</button>
-        </div>`;
-    }).join('');
+
+function renderRecordList(p) {
+
+  const container = document.getElementById('recordList');
+
+  const records = [...(p.records || [])]
+    .sort((a, b) =>
+      String(b.date).localeCompare(String(a.date))
+    );
+
+  if (!records.length) {
+
+    container.innerHTML = `
+      <p style="color:#8e8e93;font-size:13px;">
+        尚無歷史打擊紀錄
+      </p>
+    `;
+
+    return;
   }
+
+  container.innerHTML = records.map(record => {
+
+    const index = p.records.indexOf(record);
+
+    return `
+      <div class="record-item">
+
+        <div class="record-main">
+
+          <div class="record-date">
+            ${escapeHtml(record.date || '')}
+          </div>
+
+          <div class="record-stats">
+            1B${record.singles || 0}
+            　2B${record.doubles || 0}
+            　3B${record.triples || 0}
+            　HR${record.hr || 0}
+          </div>
+
+          <div class="record-stats">
+            BB${record.bb || 0}
+            　E${record.errors || 0}
+            　FC${record.fc || 0}
+            　Out${record.outs || 0}
+          </div>
+
+        </div>
+
+        <button
+          class="rec-del"
+          onclick="deleteRecord(${index})">
+          ✕
+        </button>
+
+      </div>
+    `;
+
+  }).join('');
+}
+
+
 
   function saveRecord() {
     const p = findPlayerById(currentModalPlayerId);
@@ -2493,7 +2555,7 @@
     return `${d.getMonth()+1}/${d.getDate()}`;
   }
 
-  let scheduleFilterMonth = 'all';
+  let scheduleFilterMonth = 'current_future';
   function onScheduleMonthFilterChange(value) {
     scheduleFilterMonth = value;
     renderSchedule();
@@ -3039,30 +3101,71 @@
     renderLeagueStandings();
   }
 
+function getWinPctValue(wins, losses) {
+    const w = Number(wins) || 0;
+    const l = Number(losses) || 0;
+    const total = w + l;
+    return total > 0 ? (w / total) : 0;
+  }
+
   function renderLeagueStandings() {
     const body = document.getElementById('leagueStandingsBody');
     if (!body) return;
     ensureLeagueStandings();
+
+    // 💡 1. 按下儲存/載入時，先依勝率進行排序（勝率高者在前，相同則看勝場）
+    leagueStandings.sort((a, b) => {
+      const rateA = getWinPctValue(a.wins, a.losses);
+      const rateB = getWinPctValue(b.wins, b.losses);
+      if (rateB !== rateA) {
+        return rateB - rateA;
+      }
+      return (Number(b.wins) || 0) - (Number(a.wins) || 0);
+    });
+
+    // 💡 2. 渲染時在最前面加上名次 <td>${i + 1}</td>
     body.innerHTML = leagueStandings.map((row, i) => `
       <tr>
+        <td class="rank-cell"><strong>${i + 1}</strong></td>
         <td><input class="team-name-input" type="text" value="${escapeHtml(row.team)}"
-          onchange="updateLeagueField(${i},'team',this.value)" /></td>
-        <td><input type="number" min="0" value="${row.games}" onchange="updateLeagueField(${i},'games',this.value)" /></td>
-        <td><input type="number" min="0" value="${row.wins}" onchange="updateLeagueField(${i},'wins',this.value)" /></td>
-        <td><input type="number" min="0" value="${row.losses}" onchange="updateLeagueField(${i},'losses',this.value)" /></td>
-        <td><input type="number" min="0" value="${row.ties}" onchange="updateLeagueField(${i},'ties',this.value)" /></td>
-        <td class="win-rate">${calcWinPct(row.wins,row.losses)}</td>
+          oninput="updateLeagueField(${i},'team',this.value)" /></td>
+        <td><input type="number" min="0" value="${row.games}" id="games-${i}"
+          oninput="updateLeagueField(${i},'games',this.value)" /></td>
+        <td><input type="number" min="0" value="${row.wins}"
+          oninput="updateLeagueField(${i},'wins',this.value, true, ${i})" /></td>
+        <td><input type="number" min="0" value="${row.losses}"
+          oninput="updateLeagueField(${i},'losses',this.value, true, ${i})" /></td>
+        <td><input type="number" min="0" value="${row.ties}"
+          oninput="updateLeagueField(${i},'ties',this.value, true, ${i})" /></td>
+        <td class="win-rate" id="winRate-${i}">${calcWinPct(row.wins,row.losses)}</td>
         <td><button class="league-delete" onclick="deleteLeagueTeam(${i})">✕</button></td>
       </tr>
     `).join('');
   }
 
-  function updateLeagueField(index, field, value) {
+  function updateLeagueField(index, field, value, autoCalc = false, rowIndex = null) {
     if (!leagueStandings[index]) return;
-    if (field === 'team') leagueStandings[index].team = String(value || '').trim();
-    else leagueStandings[index][field] = Math.max(0, Number(value) || 0);
-    saveAllToFirebase();
-    renderLeagueStandings();
+
+    if (field === 'team') {
+      leagueStandings[index].team = String(value || '').trim();
+    } else {
+      leagueStandings[index][field] = Math.max(0, Number(value) || 0);
+    }
+
+    if (autoCalc && rowIndex !== null) {
+      const w = Number(leagueStandings[index].wins) || 0;
+      const l = Number(leagueStandings[index].losses) || 0;
+      const t = Number(leagueStandings[index].ties) || 0;
+      const totalGames = w + l + t;
+
+      leagueStandings[index].games = totalGames;
+
+      const gamesInput = document.getElementById(`games-${rowIndex}`);
+      if (gamesInput) gamesInput.value = totalGames;
+
+      const rateEl = document.getElementById(`winRate-${rowIndex}`);
+      if (rateEl) rateEl.textContent = calcWinPct(w, l);
+    }
   }
 
   function addLeagueTeam() {
@@ -3074,7 +3177,7 @@
 
   function deleteLeagueTeam(index) {
     if (!leagueStandings[index]) return;
-    leagueStandings.splice(index,1);
+    leagueStandings.splice(index, 1);
     saveAllToFirebase();
     renderLeagueStandings();
   }
@@ -3083,10 +3186,8 @@
     ensureLeagueStandings();
     saveAllToFirebase();
     renderLeagueStandings();
-    showToast('聯盟戰績已儲存');
+    showToast('聯盟戰績已儲存並重新排序');
   }
-
-
   /* ==================================================================
      🟦 SECTION 1：ROSTER / Pitching
      - Keep existing batting records compatible.
@@ -3111,11 +3212,21 @@
     return total;
   }
 
-  function formatPitchingSummary(s) {
-    return `IP <b>${s.ip.toFixed(1)}</b> ERA <b>${s.era === null ? '—' : s.era.toFixed(2)}</b> WHIP <b>${s.whip === null ? '—' : s.whip.toFixed(2)}</b><br>
-      H:${s.h} R:${s.r} ER:${s.er} BB:${s.bb} SO:${s.so} HR:${s.hr}<br>
-      W:${s.w} L:${s.l} SV:${s.sv} HLD:${s.hld}`;
-  }
+function formatPitchingSummary(s) {
+  return `
+     <div style="font-weight:800;color:var(--brand-blue-dark);margin-bottom:4px;">Career Record</div>
+
+    投球局IP <b>${s.ip.toFixed(1)}</b>
+   　勝投W <b>${s.w}</b>
+   　敗投L <b>${s.l}</b>
+   　中繼/救援HLD/SV <b>${s.hld}</b><br>
+	四壞BB <b>${s.bb}</b>
+   　三振SO <b>${s.so}</b>
+   　失分R <b>${s.r}</b>
+   　責失ER <b>${s.er}</b>
+  `;
+}
+FC
 
   function switchPlayerStatTab(tab) {
     activePlayerStatTab = tab === 'pitching' ? 'pitching' : 'batting';
@@ -3134,25 +3245,114 @@
     if (el) el.innerHTML = formatPitchingSummary(computePitchingStats(p));
   }
 
-  function renderPitchingRecordList(p) {
-    const container = document.getElementById('pitchingRecordList');
-    if (!container) return;
-    const records = [...(p.pitchingRecords || [])].sort((a,b) => String(b.date).localeCompare(String(a.date)));
-    if (!records.length) {
-      container.innerHTML = '<p style="color:#8e8e93;font-size:13px;">尚無投球紀錄</p>';
-      return;
-    }
-    container.innerHTML = records.map((r, i) => `
-      <div class="pitching-record">
-        <div class="pitch-main">
-          <div class="pitch-date">${escapeHtml(r.date || '')}</div>
-          <div>IP ${Number(r.ip||0).toFixed(1)} · H ${Number(r.h||0)} · R ${Number(r.r||0)} · ER ${Number(r.er||0)} · BB ${Number(r.bb||0)} · SO ${Number(r.so||0)} · HR ${Number(r.hr||0)}</div>
-          <div>W ${Number(r.w||0)} · L ${Number(r.l||0)} · SV ${Number(r.sv||0)} · HLD ${Number(r.hld||0)}</div>
-        </div>
-        <button class="rec-del" onclick="deletePitchingRecord(${p.pitchingRecords.indexOf(r)})">✕</button>
-      </div>
-    `).join('');
+
+function renderPitchingRecordList(p) {
+
+  const container = document.getElementById('pitchingRecordList');
+
+  if (!container) return;
+
+  const records = [...(p.pitchingRecords || [])]
+    .sort((a, b) =>
+      String(b.date).localeCompare(String(a.date))
+    );
+
+  if (!records.length) {
+    container.innerHTML = `
+      <p style="color:#8e8e93;font-size:13px;">
+        尚無歷史投球紀錄
+      </p>
+    `;
+    return;
   }
+
+  /* 依年份分類 */
+  const years = {};
+
+  records.forEach(r => {
+    const year =
+      String(r.date || '').slice(0, 4) || '其他';
+
+    if (!years[year]) {
+      years[year] = [];
+    }
+
+    years[year].push(r);
+  });
+
+  container.innerHTML = Object.keys(years)
+    .sort((a, b) => b.localeCompare(a))
+    .map(year => {
+
+      const yearRecords = years[year];
+
+      /* 計算該年度累計 */
+      const total = computePitchingStats({
+        pitchingRecords: yearRecords
+      });
+
+      return `
+        <div class="history-year-group">
+
+          <div class="history-year-title">
+            ${escapeHtml(year)}
+          </div>
+
+          <div class="history-year-summary">
+            IP ${total.ip.toFixed(1)}
+            　W ${total.w}
+            　L ${total.l}
+            　HLD ${total.hld}
+            　BB ${total.bb}
+            　SO ${total.so}
+            　R ${total.r}
+            　ER ${total.er}
+          </div>
+
+          ${yearRecords.map(record => {
+
+            const index =
+              p.pitchingRecords.indexOf(record);
+
+            return `
+              <div class="record-item">
+
+                <div class="record-main">
+
+                  <div class="record-date">
+                    ${escapeHtml(record.date || '')}
+                  </div>
+
+                  <div class="record-stats">
+                    IP ${Number(record.ip || 0).toFixed(1)}
+                    　W ${Number(record.w || 0)}
+                    　L ${Number(record.l || 0)}
+                    　HLD ${Number(record.hld || 0)}
+                    BB ${Number(record.bb || 0)}
+                    　SO ${Number(record.so || 0)}
+                    　R ${Number(record.r || 0)}
+                    　ER ${Number(record.er || 0)}
+                  </div>
+
+                </div>
+
+                <button
+                  class="rec-del"
+                  onclick="deletePitchingRecord(${index})">
+                  ✕
+                </button>
+
+              </div>
+            `;
+
+          }).join('')}
+
+        </div>
+      `;
+
+    }).join('');
+}
+
 
   function resetPitchInputs() {
     ['pitchIP','pitchH','pitchR','pitchER','pitchBB','pitchSO','pitchHR','pitchW','pitchL','pitchSV','pitchHLD']
@@ -3284,9 +3484,14 @@
     const s = computeStats(p);
     document.getElementById('modalSummary').innerHTML = `
       <div style="font-weight:800;color:var(--brand-blue-dark);margin-bottom:4px;">Career Record</div>
-      打擊率 <b>${fmt3(s.avg)}</b>　上壘率 <b>${fmt3(s.obp)}</b>　長打率 <b>${fmt3(s.slg)}</b><br>
-      安打:${s.hits}（1B ${s.singles}/2B ${s.doubles}/3B ${s.triples}/HR ${s.hr}）　BB:${s.bb}<br>
-      失誤:${s.errors}　野選:${s.fc}　出局:${s.outs}　打數:${s.ab}`;
+      	打擊率 <b>${fmt3(s.avg)}</b>　
+	上壘率 <b>${fmt3(s.obp)}</b>　
+	長打率 <b>${fmt3(s.slg)}</b><br>
+      安打:<b>${s.hits}</b>（1B ${s.singles}/2B ${s.doubles}/3B ${s.triples}/HR ${s.hr}）　四壞BB:<b>${s.bb}</b><br>
+      失誤:<b>${s.errors}</b>　
+	野選:<b>${s.fc}　</b>
+	出局:<b>${s.outs}</b>　
+	打數:<b>${s.ab}</b>`;
   }
 
   function renderRecordList(p) {
