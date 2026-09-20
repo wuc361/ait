@@ -459,14 +459,35 @@ details.year-group[open] summary.year-header::after {
     border: none; font-size: 12px; font-weight: 700;
     padding: 5px 2px; border-radius: 6px; width: 100%; text-align: center; cursor: pointer;
   }
+  .score-cell-stepper {
+    display: flex; align-items: stretch; width: 100%; height: 44px; min-height: 44px;
+  }
   .inning-input {
-    width: 100%; height: 100%; min-height: 40px; box-sizing: border-box;
+    flex: 1; width: 100%; height: 100%; min-height: 40px; box-sizing: border-box;
     background: transparent; border: none;
     color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;
     caret-color: #ffffff; color-scheme: dark;
     text-align: center; font-size: 17px; font-weight: 700; padding: 0;
-    -webkit-user-select: text; user-select: text;
+    -webkit-user-select: text; user-select: text; min-width: 0;
   }
+  .score-step-buttons {
+    width: 18px; flex: 0 0 18px; display: flex; flex-direction: column;
+    border-left: 1px solid #3a3d42;
+  }
+  .score-step-btn {
+    flex: 1; border: 0; padding: 0; margin: 0; background: rgba(255,255,255,0.06);
+    color: #ffffff; font-size: 10px; line-height: 1; font-weight: 900; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .score-step-btn + .score-step-btn { border-top: 1px solid #3a3d42; }
+  .score-step-btn:active { background: rgba(255,255,255,0.18); }
+  .r-score-wrap { display:flex; align-items:center; justify-content:center; gap:4px; height:44px; }
+  .r-clear-btn {
+    border: 0; border-radius: 5px; padding: 2px 3px; background: rgba(255,255,255,0.12);
+    color: #ffcc00; font-size: 9px; font-weight: 800; cursor: pointer; line-height: 1.1;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .r-clear-btn:active { background: rgba(255,255,255,0.24); }
   .inning-input::-webkit-outer-spin-button,
   .inning-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .inning-input[type=number] { -moz-appearance: textfield; appearance: textfield; }
@@ -523,6 +544,12 @@ details.year-group[open] summary.year-header::after {
   .box-chip.res-FC { background: #b45f00; }
   .box-chip.res-E { background: #b0002b; }
   .box-chip.res-OUT { background: #6e6e73; }
+  .box-chip-rbi {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:14px; height:14px; padding:0 2px;
+    border-radius:7px; background:rgba(255,255,255,0.28);
+    font-size:10px; line-height:14px; font-weight:900;
+  }
   .box-chip-del {
     background: rgba(255,255,255,0.3); border-radius: 50%; width: 14px; height: 14px;
     font-size: 9px; line-height: 14px; text-align: center; cursor: pointer; flex-shrink: 0;
@@ -537,6 +564,9 @@ details.year-group[open] summary.year-header::after {
 
   .outcome-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 6px; }
   .outcome-btn { padding: 14px 4px; font-size: 13px; font-weight: 700; border-radius: 10px; color: white; }
+  .outcome-hit-wrap { display:flex; align-items:stretch; gap:3px; min-width:0; }
+  .outcome-rbi { width:28px; min-width:28px; padding:0 2px; border-radius:8px; border:1px solid #d1d1d6; background:#fff; color:#1c1c1e; font-size:12px; font-weight:800; text-align:center; -webkit-appearance:none; appearance:none; }
+  .outcome-hit-wrap .outcome-btn { flex:1; min-width:0; }
   .outcome-btn.res-1B, .outcome-btn.res-2B, .outcome-btn.res-3B { background: var(--brand-blue); }
   .outcome-btn.res-HR { background: #34c759; }
   .outcome-btn.res-BB { background: #5856d6; }
@@ -958,14 +988,14 @@ details.year-group[open] summary.year-header::after {
                       <option value="AIT">AIT</option>
                     </select>
                   </td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_1" oninput="calcScore()" /></td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_2" oninput="calcScore()" /></td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_3" oninput="calcScore()" /></td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_4" oninput="calcScore()" /></td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_5" oninput="calcScore()" /></td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_6" oninput="calcScore()" /></td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_7" oninput="calcScore()" /></td>
-                  <td class="r-col" id="top_R">0</td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_1" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',1,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('top',1,-1)">▼</button></div></div></td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_2" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',2,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('top',2,-1)">▼</button></div></div></td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_3" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',3,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('top',3,-1)">▼</button></div></div></td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_4" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',4,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('top',4,-1)">▼</button></div></div></td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_5" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',5,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('top',5,-1)">▼</button></div></div></td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_6" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',6,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('top',6,-1)">▼</button></div></div></td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_7" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',7,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('top',7,-1)">▼</button></div></div></td>
+                  <td class="r-col" id="top_R"><div class="r-score-wrap"><span class="r-score-value">0</span><button type="button" class="r-clear-btn" onclick="clearTeamScore('top')">清空</button></div></td>
                 </tr>
                 <tr>
                   <td>
@@ -974,14 +1004,14 @@ details.year-group[open] summary.year-header::after {
                       <option value="AIT" selected>AIT</option>
                     </select>
                   </td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_1" oninput="calcScore()" /></td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_2" oninput="calcScore()" /></td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_3" oninput="calcScore()" /></td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_4" oninput="calcScore()" /></td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_5" oninput="calcScore()" /></td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_6" oninput="calcScore()" /></td>
-                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_7" oninput="calcScore()" /></td>
-                  <td class="r-col" id="bot_R">0</td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_1" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',1,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',1,-1)">▼</button></div></div></td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_2" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',2,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',2,-1)">▼</button></div></div></td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_3" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',3,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',3,-1)">▼</button></div></div></td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_4" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',4,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',4,-1)">▼</button></div></div></td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_5" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',5,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',5,-1)">▼</button></div></div></td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_6" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',6,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',6,-1)">▼</button></div></div></td>
+                  <td><div class="score-cell-stepper"><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_7" oninput="calcScore()" /><div class="score-step-buttons"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',7,1)">▲</button><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',7,-1)">▼</button></div></div></td>
+                  <td class="r-col" id="bot_R"><div class="r-score-wrap"><span class="r-score-value">0</span><button type="button" class="r-clear-btn" onclick="clearTeamScore('bottom')">清空</button></div></td>
                 </tr>
               </tbody>
             </table>
@@ -1078,6 +1108,25 @@ details.year-group[open] summary.year-header::after {
         </table>
       </div>
       <button class="btn-add records-save-btn" onclick="saveLeagueStandings()">💾 儲存聯盟戰績</button>
+    </section>
+
+    <section class="records-card">
+      <div class="records-card-title">
+        <div>
+          <strong>球員打擊成績</strong>
+          <span>ROSTER 歷史打擊紀錄累計</span>
+        </div>
+        <button class="btn-muted records-refresh" onclick="renderPlayerBattingStandings()">↻ 更新</button>
+      </div>
+      <div class="records-table-wrap">
+        <table class="records-table batting-standings-table">
+          <thead>
+            <tr><th>球員</th><th>AVG</th><th>OBP</th><th>SLG</th><th>AB</th><th>H</th><th>HR</th><th>RBI</th><th>BB</th></tr>
+          </thead>
+          <tbody id="playerBattingStandingsBody"></tbody>
+        </table>
+      </div>
+      <p id="playerBattingStandingsEmpty" class="empty-msg" style="display:none;">尚無球員打擊紀錄。</p>
     </section>
   </div>
 
@@ -1245,10 +1294,10 @@ details.year-group[open] summary.year-header::after {
       <button class="modal-close" onclick="closeBoxPicker()">✕</button>
     </div>
     <div class="outcome-grid">
-      <button class="outcome-btn res-1B" onclick="chooseBoxResult('1B')">一安</button>
-      <button class="outcome-btn res-2B" onclick="chooseBoxResult('2B')">二安</button>
-      <button class="outcome-btn res-3B" onclick="chooseBoxResult('3B')">三安</button>
-      <button class="outcome-btn res-HR" onclick="chooseBoxResult('HR')">全壘打</button>
+      <div class="outcome-hit-wrap"><select id="rbi-1B" class="outcome-rbi" aria-label="一安 RBI"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-1B" onclick="chooseBoxResult('1B')">一安</button></div>
+      <div class="outcome-hit-wrap"><select id="rbi-2B" class="outcome-rbi" aria-label="二安 RBI"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-2B" onclick="chooseBoxResult('2B')">二安</button></div>
+      <div class="outcome-hit-wrap"><select id="rbi-3B" class="outcome-rbi" aria-label="三安 RBI"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-3B" onclick="chooseBoxResult('3B')">三安</button></div>
+      <div class="outcome-hit-wrap"><select id="rbi-HR" class="outcome-rbi" aria-label="全壘打 RBI"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-HR" onclick="chooseBoxResult('HR')">全壘打</button></div>
       <button class="outcome-btn res-BB" onclick="chooseBoxResult('BB')">四壞</button>
       <button class="outcome-btn res-E" onclick="chooseBoxResult('E')">失誤</button>
       <button class="outcome-btn res-FC" onclick="chooseBoxResult('FC')">野選</button>
@@ -1531,10 +1580,11 @@ onSnapshot(teamRef, (docSnap) => {
 
   function computeStats(player) {
     const records = player.records || [];
-    let singles=0, doubles=0, triples=0, hr=0, bb=0, fc=0, errors=0, outs=0;
+    let singles=0, doubles=0, triples=0, hr=0, bb=0, fc=0, errors=0, outs=0, rbi=0;
     records.forEach(r => {
-      singles += r.singles||0; doubles += r.doubles||0; triples += r.triples||0;
-      hr += r.hr||0; bb += r.bb||0; fc += r.fc||0; errors += r.errors||0; outs += r.outs||0;
+      singles += Number(r.singles)||0; doubles += Number(r.doubles)||0; triples += Number(r.triples)||0;
+      hr += Number(r.hr)||0; bb += Number(r.bb)||0; fc += Number(r.fc)||0; errors += Number(r.errors)||0; outs += Number(r.outs)||0;
+      rbi += Number(r.rbi)||0;
     });
     const hits = singles+doubles+triples+hr;
     const ab = hits+outs+fc+errors;
@@ -1542,7 +1592,7 @@ onSnapshot(teamRef, (docSnap) => {
     const avg = ab>0 ? hits/ab : null;
     const obp = (ab+bb)>0 ? (hits+bb)/(ab+bb) : null;
     const slg = ab>0 ? totalBases/ab : null;
-    return { games: records.length, singles,doubles,triples,hr,bb,fc,errors,outs,hits,ab,totalBases,avg,obp,slg };
+    return { games: records.length, singles,doubles,triples,hr,bb,fc,errors,outs,rbi,hits,ab,totalBases,avg,obp,slg };
   }
 
   function renderRoster() {
@@ -1712,6 +1762,7 @@ function renderRecordList(p) {
 		2B:	${record.doubles || 0}
 		3B:	${record.triples || 0}
 		HR:	${record.hr || 0}
+		RBI:	${record.rbi || 0}
 		BB:	${record.bb || 0}
 		E:	${record.errors || 0}
 		FC:	${record.fc || 0}
@@ -1776,8 +1827,8 @@ function renderRecordList(p) {
       p.records.push({
         date,
         singles: input1B, doubles: input2B, triples: input3B, hr: inputHR,
-        bb: inputBB, errors: inputE, fc: inputFC, outs: inputOuts,
-        boxContribution: { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0 }
+        bb: inputBB, errors: inputE, fc: inputFC, outs: inputOuts, rbi: 0,
+        boxContribution: { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0, rbi:0 }
       });
       showToast('紀錄已新增');
     }
@@ -2381,12 +2432,31 @@ function renderRecordList(p) {
 
   function calcScore() {
     let topSum = 0;
-    for (let i = 1; i <= 7; i++) { topSum += parseInt(document.getElementById(`top_${i}`).value) || 0; }
-    document.getElementById('top_R').textContent = topSum;
+    for (let i = 1; i <= 7; i++) { topSum += Math.max(0, parseInt(document.getElementById(`top_${i}`).value) || 0); }
+    const topR = document.querySelector('#top_R .r-score-value');
+    if (topR) topR.textContent = topSum;
 
     let botSum = 0;
-    for (let i = 1; i <= 7; i++) { botSum += parseInt(document.getElementById(`bot_${i}`).value) || 0; }
-    document.getElementById('bot_R').textContent = botSum;
+    for (let i = 1; i <= 7; i++) { botSum += Math.max(0, parseInt(document.getElementById(`bot_${i}`).value) || 0); }
+    const botR = document.querySelector('#bot_R .r-score-value');
+    if (botR) botR.textContent = botSum;
+  }
+
+  function adjustInningScore(side, inning, delta) {
+    const input = document.getElementById(`${side === 'bottom' ? 'bot' : 'top'}_${inning}`);
+    if (!input) return;
+    const current = Math.max(0, parseInt(input.value, 10) || 0);
+    input.value = Math.max(0, current + delta);
+    calcScore();
+  }
+
+  function clearTeamScore(side) {
+    const prefix = side === 'bottom' ? 'bot' : 'top';
+    for (let i = 1; i <= 7; i++) {
+      const input = document.getElementById(`${prefix}_${i}`);
+      if (input) input.value = '';
+    }
+    calcScore();
   }
   function onTeamChange(changedSide) {
     const topSelect = document.getElementById('teamTop');
@@ -2472,7 +2542,9 @@ function renderRecordList(p) {
         const ent = boxScore[date].entries.find(e => e.playerId === p.id && e.col === col && e.game === boxGame);
         if (ent) {
           const def = RESULT_DEFS.find(r => r.code === ent.code);
-          cellsHtml += `<td><span class="box-chip res-${ent.code}">${def.label}<span class="box-chip-del" onclick="removeBoxEntry('${ent.id}')">✕</span></span></td>`;
+          const showRbi = ['1B','2B','3B','HR'].includes(ent.code);
+          const rbiValue = showRbi ? (Number.isFinite(Number(ent.rbi)) ? Number(ent.rbi) : 0) : null;
+          cellsHtml += `<td><span class="box-chip res-${ent.code}">${def.label}${showRbi && rbiValue > 0 ? `<small class="box-chip-rbi">${rbiValue}</small>` : ''}<span class="box-chip-del" onclick="removeBoxEntry('${ent.id}')">✕</span></span></td>`;
         } else {
           cellsHtml += `<td><button class="box-cell-empty-btn" onclick="openBoxPicker('${p.id}', ${col})">＋</button></td>`;
         }
@@ -2503,6 +2575,7 @@ function renderRecordList(p) {
     const p = findPlayerById(playerId);
     const gameLabel = boxGame === 1 ? '第一場' : '第二場';
     document.getElementById('boxPickerTitle').textContent = `${p ? p.name : ''} · ${gameLabel} · 第 ${col} 打席`;
+    ['1B','2B','3B','HR'].forEach(code => { const el=document.getElementById(`rbi-${code}`); if(el) el.value = code==='HR' ? '1' : '0'; });
     document.getElementById('boxPickerOverlay').classList.add('show');
   }
   function closeBoxPicker() {
@@ -2516,13 +2589,15 @@ function renderRecordList(p) {
     if (!currentBoxTarget) return;
     const { playerId, col, game } = currentBoxTarget;
     const def = RESULT_DEFS.find(r => r.code === code);
+    const rbiEl = document.getElementById(`rbi-${code}`);
+    const rbi = ['1B','2B','3B','HR'].includes(code) ? Math.max(0, Math.min(4, parseInt(rbiEl ? rbiEl.value : (code==='HR'?'1':'0'),10) || 0)) : 0;
     const date = todayStr();
     ensureBoxDate(date);
 
     const exists = boxScore[date].entries.find(e => e.playerId === playerId && e.col === col && e.game === game);
     if (exists) { showToast('此打席已有紀錄，請先移除再重新記錄'); closeBoxPicker(); return; }
 
-    boxScore[date].entries.push({ id: makeId(), playerId, col, code, game });
+    boxScore[date].entries.push({ id: makeId(), playerId, col, code, game, rbi });
     isBoxDirty = true;
     updateBoxSaveIndicator();
 
@@ -2546,12 +2621,13 @@ function renderRecordList(p) {
 
   // 依「今天」box entries，計算每位球員的加總數據
   function computeBoxTotalsForPlayerDate(playerId, date) {
-    const totals = { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0 };
+    const totals = { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0, rbi:0 };
     const dayData = boxScore[date];
     if (!dayData) return totals;
     dayData.entries.filter(e => e.playerId === playerId).forEach(e => {
       const def = RESULT_DEFS.find(r => r.code === e.code);
       if (def) totals[def.field] = (totals[def.field] || 0) + 1;
+      totals.rbi += Number(e.rbi) || 0;
     });
     return totals;
   }
@@ -2571,7 +2647,7 @@ function renderRecordList(p) {
       if (!p) return;
       if (!p.records) p.records = [];
       let rec = p.records.find(r => r.date === date);
-      const zero = { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0 };
+      const zero = { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0, rbi:0 };
       const oldContribution = (rec && rec.boxContribution) ? rec.boxContribution : zero;
       const newContribution = computeBoxTotalsForPlayerDate(playerId, date);
 
@@ -2579,7 +2655,7 @@ function renderRecordList(p) {
         rec = { date, singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0, boxContribution: {...zero} };
         p.records.push(rec);
       }
-      ['singles','doubles','triples','hr','bb','errors','fc','outs'].forEach(field => {
+      ['singles','doubles','triples','hr','bb','errors','fc','outs','rbi'].forEach(field => {
         const next = (rec[field] || 0) - (oldContribution[field] || 0) + (newContribution[field] || 0);
         rec[field] = next < 0 ? 0 : next;
       });
@@ -2587,14 +2663,50 @@ function renderRecordList(p) {
     });
   }
 
+  // 將 SCORES 的當前比分同步到今天 SCHEDULE 對應的第 1 / 2 場
+  function syncScoreboardToTodaySchedule(date, gameNum) {
+    const topTeam = document.getElementById('teamTop')?.value || '客隊';
+    const bottomTeam = document.getElementById('teamBottom')?.value || 'AIT';
+    const topRuns = Number(document.getElementById('top_R')?.textContent) || 0;
+    const bottomRuns = Number(document.getElementById('bot_R')?.textContent) || 0;
+
+    const matches = (schedule.matches || []).filter(m => m.date === date);
+    if (!matches.length) return null;
+
+    // 優先找對手名稱與 SCORES 隊伍一致的當日賽程；找不到則使用當日第一筆。
+    const opponentName = topTeam === 'AIT' ? bottomTeam : topTeam;
+    const match = matches.find(m => String(m.teamA || '').trim() === String(opponentName || '').trim()) || matches[0];
+    ensureMatchGames(match);
+
+    const opponentIsTop = topTeam !== 'AIT';
+    const opponentRuns = opponentIsTop ? topRuns : bottomRuns;
+    const aitRuns = opponentIsTop ? bottomRuns : topRuns;
+    const gameKey = gameNum === 2 ? 'game2' : 'game1';
+
+    match[gameKey].scoreA = opponentRuns;
+    match[gameKey].scoreB = aitRuns;
+    return match;
+  }
+
   function saveBoxScoreToday() {
     const date = todayStr();
     commitBoxScoreToRoster(date);
+
+    // SAVE 時依目前 SCORES 的 1st / 2nd game，將兩隊總分寫回今天 SCHEDULE。
+    const syncedMatch = syncScoreboardToTodaySchedule(date, boxGame);
     saveAllToFirebase();
     isBoxDirty = false;
     updateBoxSaveIndicator();
     render();
-    showToast('💾 今日逐打席紀錄已儲存，球員資料已同步更新');
+
+    if (syncedMatch) {
+      renderSchedule();
+      renderRecordsPage();
+      const gameLabel = boxGame === 1 ? '第一場' : '第二場';
+      showToast(`💾 ${gameLabel}打擊成績已儲存，RBI／球員成績與當日 SCHEDULE 兩隊比分已同步`);
+    } else {
+      showToast('💾 今日逐打席紀錄已儲存，球員資料已同步更新（今天尚無對應 SCHEDULE）');
+    }
   }
 
 
@@ -2607,18 +2719,7 @@ function renderRecordList(p) {
     return SCHEDULE_HOURS.map(h => `<option value="${h}" ${h===selected?'selected':''}>${h}</option>`).join('');
   }
 
-  function getDefaultScheduleMatches() {
-    return [
-      { id: makeId(), date: '2026-09-13', start: '14', end: '16', teamA: 'Snipers', teamB: 'AIT',
-        game1: { scoreA: null, scoreB: null }, game2: { scoreA: null, scoreB: null } },
-      { id: makeId(), date: '2026-09-20', start: '10', end: '12', teamA: '3A BOSS', teamB: 'AIT',
-        game1: { scoreA: null, scoreB: null }, game2: { scoreA: null, scoreB: null } },
-      { id: makeId(), date: '2026-09-27', start: '10', end: '12', teamA: '李明賀', teamB: 'AIT',
-        game1: { scoreA: null, scoreB: null }, game2: { scoreA: null, scoreB: null } },
-      { id: makeId(), date: '2026-10-11', start: '08', end: '10', teamA: 'Talks', teamB: 'AIT',
-        game1: { scoreA: null, scoreB: null }, game2: { scoreA: null, scoreB: null } },
-    ];
-  }
+
 
   function findMatchById(id) { return (schedule.matches || []).find(m => m.id === id); }
   function ensureMatchGames(m) {
@@ -3178,9 +3279,30 @@ function renderRecordList(p) {
     if (empty) empty.style.display = names.length ? 'none' : 'block';
 
     renderLeagueStandings();
+    renderPlayerBattingStandings();
   }
 
-function getWinPctValue(wins, losses) {
+function renderPlayerBattingStandings() {
+    const body = document.getElementById('playerBattingStandingsBody');
+    const empty = document.getElementById('playerBattingStandingsEmpty');
+    if (!body) return;
+    const rows = (roster || []).map(p => ({ p, s: computeStats(p) }))
+      .filter(x => x.s.ab > 0 || x.s.rbi > 0 || x.s.bb > 0)
+      .sort((a,b) => {
+        if (b.s.rbi !== a.s.rbi) return b.s.rbi - a.s.rbi;
+        if (b.s.hits !== a.s.hits) return b.s.hits - a.s.hits;
+        return (a.p.name || '').localeCompare((b.p.name || ''), ['zh-Hant','en'], {numeric:true});
+      });
+    body.innerHTML = rows.map(({p,s}) => `
+      <tr>
+        <td>${escapeHtml(p.name || '')}</td>
+        <td>${fmt3(s.avg)}</td><td>${fmt3(s.obp)}</td><td>${fmt3(s.slg)}</td>
+        <td>${s.ab}</td><td>${s.hits}</td><td>${s.hr}</td><td><strong>${s.rbi}</strong></td><td>${s.bb}</td>
+      </tr>`).join('');
+    if (empty) empty.style.display = rows.length ? 'none' : 'block';
+  }
+
+  function getWinPctValue(wins, losses) {
     const w = Number(wins) || 0;
     const l = Number(losses) || 0;
     const total = w + l;
@@ -3296,7 +3418,7 @@ function formatPitchingSummary(s) {
      <div style="font-weight:800;color:var(--brand-blue-dark);margin-bottom:4px;">Career Record</div>
 
     	局數IP:	<b>${s.ip.toFixed(1)}</b>
-	防禦率ERA:	<b>${s.era}</b>
+	防禦率ERA:	<b>${s.era !== null ? s.era.toFixed(2) : '—'}</b>
 	勝投W:	<b>${s.w}</b>
    　敗投L:	<b>${s.l}</b>
    　救援SV:	<b>${s.sv}</b><br>
@@ -3479,7 +3601,7 @@ function renderPitchingRecordList(p) {
         </div>
         ${inLineup ? `<span class="roster-badge">第${activeGame===1?'一':'二'}場</span>` : ''}
         <div class="roster-stats roster-dual-stats">
-          <div>AVG${fmt3(b.avg)}</div>
+          <div>AVG ${fmt3(b.avg)}</div>
           <div>${pit.ip > 0 ? 'ERA '+pit.era.toFixed(2):'' }</div>
         </div>
         <button class="roster-trash" onclick="deleteFromRoster('${p.id}')">🗑</button>`;
@@ -3539,6 +3661,7 @@ function renderPitchingRecordList(p) {
       	AB: <b>${s.ab}</b>
 	Hit: <b>${s.hits}</b>
 	HR:  <b>${s.hr}</b>
+	RBI: <b>${s.rbi}</b>
 	BB: <b>${s.bb}</b>
       	E: <b>${s.errors}</b>
 	FC: <b>${s.fc}</b>
