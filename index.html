@@ -217,7 +217,13 @@
   }
   .roster-handle {
     width: 30px; height: 40px; display: flex; align-items: center; justify-content: center;
-    font-size: 18px; color: var(--brand-blue); flex-shrink: 0; background:var(--brand-blue-light); border-radius:8px;
+    font-size: 18px; color: var(--brand-blue); flex-shrink: 0; background:var(--brand-blue-light);
+    border-radius:8px; touch-action:none; cursor:grab;
+  }
+  li.roster-row.dragging {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    opacity: 0.95;
+    background: #f0f7ff;
   }
   .roster-number {
     flex-shrink: 0; width: 28px; height: 28px; border-radius: 7px; background: var(--brand-blue-dark); color: white;
@@ -384,45 +390,145 @@
     box-shadow: inset 0 0 5px rgba(0,0,0,0.5); min-width: 0;
     display: flex; flex-direction: column; justify-content: center;
   }
-  .scoreboard-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .scoreboard-table {
-    border-collapse: collapse; text-align: center; font-size: 13px;
-    min-width: 480px;
-  }
-  .scoreboard-table th, .scoreboard-table td { border: 1px solid #3a3d42; }
-  .scoreboard-table th { color: #d1d1d6; font-weight: 700; padding: 6px 2px; background: #2a2d33; font-size: 12px; width: 46px; }
-  .scoreboard-table th:first-child, .scoreboard-table td:first-child { width: 62px; }
-  .scoreboard-table th.r-col, .scoreboard-table td.r-col {
-    color: #ffcc00 !important; -webkit-text-fill-color: #ffcc00 !important;
-    font-weight: 800; font-size: 17px; background: rgba(255,204,0,0.12); width: 52px;
-  }
-  .scoreboard-table td { padding: 0; height: 44px; }
-  .team-select {
-    background: #3a3d42; color: #ffffff; -webkit-text-fill-color: #ffffff; color-scheme: dark;
-    border: none; font-size: 12px; font-weight: 700;
-    padding: 5px 2px; border-radius: 6px; width: 100%; text-align: center; cursor: pointer;
-  }
-  .score-cell-stepper {
-    display: flex; align-items: center; justify-content: center; gap: 2px;
-    width: 100%; height: 44px; min-height: 44px; padding: 2px; box-sizing: border-box;
-  }
-  .inning-input {
-    flex: 1 1 auto; width: 100%; min-width: 0; height: 38px; min-height: 38px; box-sizing: border-box;
-    background: transparent; border: none;
-    color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;
-    caret-color: #ffffff; color-scheme: dark; text-align: center;
-    font-size: 17px; font-weight: 700; padding: 0;
-    -webkit-user-select: text; user-select: text;
-  }
-  /* 每一局只有一層控制：▲ / 分數 / ▼，不再上下堆疊第二層按鈕 */
-  .score-step-btn {
-    width: 20px; height: 30px; flex: 0 0 20px;
-    border: 0; padding: 0; margin: 0; border-radius: 5px;
-    background: rgba(255,255,255,0.10); color: #ffffff; font-size: 11px;
-    line-height: 1; font-weight: 900; cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .score-step-btn:active { background: rgba(255,255,255,0.24); }
+/* ==================== SCOREBOARD ==================== */
+
+.scoreboard-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* 手機版保持隊伍名稱與 R 固定，中間 1~7 局可以左右滑動 */
+.scoreboard-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: center;
+  font-size: 13px;
+  width: 100%;
+  min-width: 430px;
+  table-layout: fixed;
+}
+
+.scoreboard-table th,
+.scoreboard-table td {
+  border: 1px solid #3a3d42;
+  height: 44px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.scoreboard-table th {
+  color: #d1d1d6;
+  font-weight: 700;
+  background: #2a2d33;
+  font-size: 12px;
+}
+
+/* 隊伍名稱欄 */
+.scoreboard-table th:first-child,
+.scoreboard-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  width: 62px;
+  min-width: 62px;
+  max-width: 62px;
+  background: #2a2d33;
+}
+
+/* 第一欄資料列背景 */
+.scoreboard-table td:first-child {
+  background: #22252a;
+}
+
+/* 1~7局欄位 */
+.scoreboard-table th:not(:first-child):not(.r-col),
+.scoreboard-table td:not(:first-child):not(.r-col) {
+  width: 46px;
+  min-width: 46px;
+}
+
+/* 最後 R 總分欄固定在右側 */
+.scoreboard-table th.r-col,
+.scoreboard-table td.r-col {
+  position: sticky;
+  right: 0;
+  z-index: 5;
+
+  width: 52px;
+  min-width: 52px;
+  max-width: 52px;
+
+  color: #ffcc00 !important;
+  -webkit-text-fill-color: #ffcc00 !important;
+  font-weight: 800;
+  font-size: 17px;
+  background: #30333a;
+
+  box-shadow: -3px 0 5px rgba(0,0,0,0.25);
+}
+
+/* 左側固定欄的陰影 */
+.scoreboard-table td:first-child,
+.scoreboard-table th:first-child {
+  box-shadow: 3px 0 5px rgba(0,0,0,0.20);
+}
+
+/* 手動輸入分數 */
+.inning-input {
+  display: block;
+  width: 100%;
+  height: 42px;
+  min-height: 42px;
+
+  box-sizing: border-box;
+  padding: 0;
+
+  background: transparent;
+  border: none;
+
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+
+  caret-color: #ffffff;
+  color-scheme: dark;
+
+  text-align: center;
+  font-size: 17px;
+  font-weight: 700;
+
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.inning-input:focus {
+  outline: none;
+  background: rgba(255,255,255,0.08);
+}
+
+/* 隊伍選擇 */
+.team-select {
+  width: 100%;
+  height: 42px;
+  box-sizing: border-box;
+
+  background: #3a3d42;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  color-scheme: dark;
+
+  border: none;
+  border-radius: 6px;
+
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 2px;
+  text-align: center;
+  cursor: pointer;
+}
+
+
   .r-score-wrap { display:flex; align-items:center; justify-content:center; gap:4px; height:44px; }
   .bso-row { display: flex; align-items: center; justify-content: flex-start; gap: 10px; cursor: pointer; padding: 2px 0; }
   .bso-label { font-weight: 900; font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
@@ -522,12 +628,6 @@
     color: var(--brand-blue-dark);
     position: relative;
   }
-.news-schedule-table tr.next-match-highlight td {
-  background: var(--brand-blue-light);
-  font-weight: 800;
-  color: var(--brand-blue-dark);
-  position: relative;
-}
   .news-scores-section { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
   .news-scores-column { flex: 1; min-width: 260px; }
   .news-scores-column h3 {
@@ -558,6 +658,11 @@
   .hour-select {
     padding: 6px; font-size: 13px; border: 1px solid #d1d1d6; border-radius: 8px;
     background: white; -webkit-appearance: none; text-align: center; width: auto;
+  }
+  .competition-select {
+    min-width: 72px;
+    color: #b45f00;
+    font-weight: 700;
   }
   .match-card {
     position: relative;
@@ -939,22 +1044,24 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
+                
+<tr>
                   <td>
                     <select class="team-select" id="teamTop" onchange="onTeamChange('top')">
                       <option value="客隊" selected>客隊</option>
                       <option value="AIT">AIT</option>
                     </select>
                   </td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',1,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_1" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('top',1,-1)" aria-label="減少分數">▼</button></div></td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',2,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_2" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('top',2,-1)" aria-label="減少分數">▼</button></div></td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',3,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_3" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('top',3,-1)" aria-label="減少分數">▼</button></div></td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',4,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_4" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('top',4,-1)" aria-label="減少分數">▼</button></div></td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',5,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_5" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('top',5,-1)" aria-label="減少分數">▼</button></div></td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',6,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_6" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('top',6,-1)" aria-label="減少分數">▼</button></div></td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('top',7,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_7" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('top',7,-1)" aria-label="減少分數">▼</button></div></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_1" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_2" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_3" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_4" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_5" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_6" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="top_7" oninput="calcScore()" /></td>
                   <td class="r-col" id="top_R"><div class="r-score-wrap"><span class="r-score-value">0</span></div></td>
                 </tr>
+                <!-- 主隊 (Bottom) -->
                 <tr>
                   <td>
                     <select class="team-select" id="teamBottom" onchange="onTeamChange('bottom')">
@@ -962,15 +1069,16 @@
                       <option value="AIT" selected>AIT</option>
                     </select>
                   </td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',1,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_1" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',1,-1)" aria-label="減少分數">▼</button></div></td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',2,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_2" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',2,-1)" aria-label="減少分數">▼</button></div></td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',3,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_3" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',3,-1)" aria-label="減少分數">▼</button></div></td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',4,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_4" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',4,-1)" aria-label="減少分數">▼</button></div></td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',5,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_5" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',5,-1)" aria-label="減少分數">▼</button></div></td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',6,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_6" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',6,-1)" aria-label="減少分數">▼</button></div></td>
-                  <td><div class="score-cell-stepper"><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',7,1)" aria-label="增加分數">▲</button><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_7" oninput="calcScore()" /><button type="button" class="score-step-btn" onclick="adjustInningScore('bottom',7,-1)" aria-label="減少分數">▼</button></div></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_1" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_2" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_3" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_4" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_5" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_6" oninput="calcScore()" /></td>
+                  <td><input class="inning-input" type="number" min="0" inputmode="numeric" id="bot_7" oninput="calcScore()" /></td>
                   <td class="r-col" id="bot_R"><div class="r-score-wrap"><span class="r-score-value">0</span></div></td>
                 </tr>
+
               </tbody>
             </table>
           </div>
@@ -1000,11 +1108,11 @@
               <div class="dot" id="o3"></div>
             </div>
           </div>
-          <div class="bso-reset-btn" onclick="resetBSO()">重置 B/S（保留出局數）</div>
+          <div class="bso-reset-btn" onclick="resetBSO()">重置 B/S</div>
         </div>
       </div>
     </div>
-    <p class="score-auto-note">AIT 每局比分會依「打席紀錄表」該局所有球員的 RBI 自動加總；仍可直接輸入或用 ▲▼ 手動調整。按 SAVE 後同步至當日 SCHEDULE。</p>
+    <p class="score-auto-note">AIT 每局比分會依「打席紀錄表」該局所有球員的 RBI 自動加總。</p>
 
     <h2>打席紀錄表
       <span class="section-actions">
@@ -1037,7 +1145,7 @@
           <strong>對戰戰績</strong>
           <span>歷史對戰勝負</span>
         </div>
-        <button class="btn-muted records-refresh" onclick="renderRecordsPage()">↻ 更新</button>
+        
       </div>
       <div class="records-table-wrap">
         <table class="records-table">
@@ -1088,7 +1196,7 @@
             <option value="name">姓名</option>
           </select>
           <button id="battingSortDir" class="btn-muted records-sort-dir" onclick="toggleBattingSortDirection()">↓</button>
-          <button class="btn-muted records-refresh" onclick="renderPlayerBattingStandings()">↻ 更新</button>
+          
         </div>
       </div>
       <div class="records-table-wrap">
@@ -1121,7 +1229,7 @@
 
     <div class="roster-panel">
       <div class="match-top-row" style="margin-bottom:8px;">
-<input type="date" id="matchDateInput" />
+        <input type="date" id="matchDateInput" />
         <select class="hour-select" id="matchStartInput">
           <option value="08" selected>08</option>
           <option value="09">09</option>
@@ -1146,6 +1254,10 @@
           <option value="15">15</option>
           <option value="16">16</option>
           <option value="17">17</option>
+        </select>
+        <select class="hour-select competition-select" id="matchCompetitionInput" aria-label="賽事">
+          <option value="">賽事</option>
+          <option value="里長杯">里長杯</option>
         </select>
       </div>
       <div class="match-teams-row">
@@ -1588,6 +1700,7 @@ onSnapshot(teamRef, (docSnap) => {
     const emptyMsg = document.getElementById('rosterEmptyMsg');
     const search = document.getElementById('rosterSearch');
     if (!container) return;
+
     const keyword = (search?.value || '').trim().toLowerCase();
     container.innerHTML = '';
 
@@ -1595,22 +1708,30 @@ onSnapshot(teamRef, (docSnap) => {
       !keyword || String(p.name||'').toLowerCase().includes(keyword) ||
       (p.number !== undefined && String(p.number).toLowerCase().includes(keyword))
     );
+
     if (rosterSort === 'name') {
-      filtered.sort((a,b) => (a.name||'').localeCompare((b.name||''), ['zh-Hant','en'], {sensitivity:'base',numeric:true}));
+      filtered.sort((a,b) =>
+        (a.name||'').localeCompare((b.name||''), ['zh-Hant','en'], {
+          sensitivity:'base', numeric:true
+        })
+      );
     }
+
     if (emptyMsg) emptyMsg.style.display = roster.length ? 'none' : 'block';
 
     const currentLineup = getLineup();
-    filtered.forEach(p => {
+    filtered.forEach((p) => {
       const b = computeStats(p);
       const pit = computePitchingStats(p);
       const inLineup = currentLineup.some(e => e.id === p.id);
       const posLine = `<span class="primary-tag">${p.primary ? '主:'+escapeHtml(p.primary) : '主:—'}</span>
         <span class="secondary-tag"> / 副:${p.secondary ? escapeHtml(p.secondary) : '—'}</span>`;
+
       const li = document.createElement('li');
-      li.className='roster-row'; li.dataset.playerId=p.id;
+      li.className = 'roster-row';
+      li.dataset.playerId = p.id;
       li.innerHTML = `
-        <div class="roster-handle" data-player-id="${p.id}">⠿</div>
+        <div class="roster-handle" data-player-id="${p.id}" title="長按後上下拖曳排序">⠿</div>
         <div class="roster-number ${p.number ? '' : 'empty'}">${displayNumber(p.number)}</div>
         <div class="roster-main">
           <button class="roster-name-btn" onclick="openModal('${p.id}')">${escapeHtml(p.name)}</button>
@@ -1619,11 +1740,12 @@ onSnapshot(teamRef, (docSnap) => {
         ${inLineup ? `<span class="roster-badge">第${activeGame===1?'一':'二'}場</span>` : ''}
         <div class="roster-stats roster-dual-stats">
           <div>AVG ${fmt3(b.avg)}</div>
-          <div>${pit.ip > 0 ? 'ERA '+pit.era.toFixed(2):'' }</div>
+          <div>${pit.ip > 0 ? 'ERA '+pit.era.toFixed(2) : ''}</div>
         </div>
         <button class="roster-trash" onclick="deleteFromRoster('${p.id}')">🗑</button>`;
       container.appendChild(li);
     });
+
     attachRosterDragHandlers();
   }
 
@@ -1972,7 +2094,7 @@ function renderPitchingRecordList(p) {
     return `
       <details class="year-group" ${isOpen}>
         <summary class="year-header">
-          <span>${escapeHtml(year)} 年 (${yearRecords.length} 筆投球紀錄)</span>
+          <span>${escapeHtml(year)} 年 (${yearRecords.length} 筆紀錄)</span>
         </summary>
         <div class="year-content">
           ${recordsHtml}
@@ -2303,12 +2425,172 @@ function renderPitchingRecordList(p) {
     render();
   }
 
+  // ROSTER custom order:
+  // short tap on ⠿ = add/remove from current LINE UP behavior;
+  // long-press + drag = persist the player's custom roster position.
+  let rosterDragging = false, rosterLongPressTimer = null;
+  let rosterDragStartY = 0, rosterDragIndex = null, rosterPlaceholderIndex = null;
+  let rosterItemHeight = 0, rosterDraggedLi = null, rosterAllLis = [];
+
   function attachRosterDragHandlers() {
-    document.querySelectorAll('.roster-handle').forEach(handle => {
-      handle.addEventListener('click', () => {
-        quickAddToEnd(handle.dataset.playerId);
-      });
+    document.querySelectorAll('#rosterList .roster-handle').forEach(handle => {
+      handle.addEventListener('touchstart', onRosterReorderTouchStart, { passive: false });
+      handle.addEventListener('click', onRosterHandleClick);
     });
+  }
+
+  function onRosterHandleClick(e) {
+    // A drag/long-press is handled by touch events; only a normal short tap
+    // reaches this click handler.
+    if (rosterDragging || e.currentTarget.dataset.rosterDragged === '1') {
+      e.currentTarget.dataset.rosterDragged = '0';
+      return;
+    }
+    quickAddToEnd(e.currentTarget.dataset.playerId);
+  }
+
+  function onRosterReorderTouchStart(e) {
+    const handle = e.currentTarget;
+    const li = handle.closest('.roster-row');
+    if (!li) return;
+
+    const visibleRows = Array.from(document.querySelectorAll('#rosterList .roster-row'));
+    const index = visibleRows.indexOf(li);
+    if (index < 0) return;
+
+    const touch = e.touches[0];
+    const startY = touch.clientY;
+    rosterDragStartY = startY;
+    clearTimeout(rosterLongPressTimer);
+
+    rosterLongPressTimer = setTimeout(() => {
+      startRosterReorderDrag(li, index, startY);
+    }, 300);
+
+    const moveHandler = (ev) => {
+      const t = ev.touches[0];
+      if (!rosterDragging) {
+        if (Math.abs(t.clientY - startY) > 10) {
+          clearTimeout(rosterLongPressTimer);
+          cleanup();
+        }
+        return;
+      }
+      ev.preventDefault();
+      onRosterReorderDragMove(t.clientY);
+    };
+
+    const endHandler = () => {
+      clearTimeout(rosterLongPressTimer);
+      if (rosterDragging) onRosterReorderDragEnd();
+      cleanup();
+    };
+
+    function cleanup() {
+      document.removeEventListener('touchmove', moveHandler);
+      document.removeEventListener('touchend', endHandler);
+      document.removeEventListener('touchcancel', endHandler);
+    }
+
+    document.addEventListener('touchmove', moveHandler, { passive: false });
+    document.addEventListener('touchend', endHandler);
+    document.addEventListener('touchcancel', endHandler);
+  }
+
+  function startRosterReorderDrag(li, index, clientY) {
+    rosterDragging = true;
+    rosterDraggedLi = li;
+    rosterDragIndex = index;
+    rosterPlaceholderIndex = index;
+    rosterItemHeight = li.offsetHeight + 6;
+    rosterDragStartY = clientY;
+    rosterAllLis = Array.from(document.querySelectorAll('#rosterList .roster-row'));
+
+    li.classList.add('dragging');
+    li.style.position = 'relative';
+    li.style.zIndex = '999';
+    li.querySelector('.roster-handle')?.setAttribute('data-roster-dragged', '1');
+
+    if (navigator.vibrate) navigator.vibrate(15);
+  }
+
+  function onRosterReorderDragMove(clientY) {
+    if (!rosterDraggedLi) return;
+
+    const deltaY = clientY - rosterDragStartY;
+    rosterDraggedLi.style.transform = `translateY(${deltaY}px)`;
+
+    const newIndex = Math.min(
+      Math.max(
+        rosterDragIndex + Math.round(deltaY / Math.max(rosterItemHeight, 1)),
+        0
+      ),
+      rosterAllLis.length - 1
+    );
+
+    if (newIndex === rosterPlaceholderIndex) return;
+
+    rosterAllLis.forEach((row, i) => {
+      if (i === rosterDragIndex) return;
+      let offset = 0;
+      if (rosterDragIndex < newIndex && i > rosterDragIndex && i <= newIndex) {
+        offset = -rosterItemHeight;
+      } else if (rosterDragIndex > newIndex && i >= newIndex && i < rosterDragIndex) {
+        offset = rosterItemHeight;
+      }
+      row.style.transition = 'transform 0.15s';
+      row.style.transform = `translateY(${offset}px)`;
+    });
+
+    rosterPlaceholderIndex = newIndex;
+  }
+
+  function onRosterReorderDragEnd() {
+    const oldIndex = rosterDragIndex;
+    const newIndex = rosterPlaceholderIndex;
+    const draggedId = rosterDraggedLi?.dataset.playerId;
+
+    rosterDragging = false;
+
+    if (rosterDraggedLi) {
+      rosterDraggedLi.classList.remove('dragging');
+      rosterDraggedLi.style.transform = '';
+      rosterDraggedLi.style.position = '';
+      rosterDraggedLi.style.zIndex = '';
+    }
+    rosterAllLis.forEach(row => {
+      row.style.transform = '';
+      row.style.transition = '';
+    });
+
+    if (draggedId && oldIndex !== newIndex) {
+      // Reorder only the currently displayed subset. This means a search filter
+      // does not accidentally move hidden players around.
+      const visibleIds = rosterAllLis.map(row => row.dataset.playerId);
+      const visiblePlayers = visibleIds
+        .map(id => roster.find(p => p.id === id))
+        .filter(Boolean);
+
+      const [moved] = visiblePlayers.splice(oldIndex, 1);
+      visiblePlayers.splice(newIndex, 0, moved);
+
+      const visibleIdSet = new Set(visibleIds);
+      let visibleCursor = 0;
+      roster = roster.map(player =>
+        visibleIdSet.has(player.id) ? visiblePlayers[visibleCursor++] : player
+      );
+
+      // Dragging explicitly means the user wants a custom order.
+      rosterSort = 'custom';
+      saveRoster();
+      showToast('ROSTER 順序已更新');
+    }
+
+    rosterDragIndex = null;
+    rosterPlaceholderIndex = null;
+    rosterDraggedLi = null;
+    rosterAllLis = [];
+    renderRoster();
   }
   function quickAddToEnd(playerId) {
     let currentLineup = getLineup();
@@ -2739,14 +3021,7 @@ function renderPitchingRecordList(p) {
     markScoreDirty();
   }
 
-  function adjustInningScore(side, inning, delta) {
-    const input = document.getElementById(`${side === 'bottom' ? 'bot' : 'top'}_${inning}`);
-    if (!input) return;
-    const current = Math.max(0, parseInt(input.value,10) || 0);
-    input.value = Math.max(0, current + delta);
-    calcScore();
-  }
-
+  
   function switchScoreGame(gameNum) {
     if (scoreGame !== gameNum) calcScore();
     scoreGame = gameNum === 2 ? 2 : 1;
@@ -2754,20 +3029,70 @@ function renderPitchingRecordList(p) {
     renderScoreboard();
   }
 
-  function onTeamChange(changedSide) {
-    const topSelect = document.getElementById('teamTop');
-    const botSelect = document.getElementById('teamBottom');
-    if (!topSelect || !botSelect) return;
+ function onTeamChange(changedSide) {
+  const topSelect = document.getElementById('teamTop');
+  const botSelect = document.getElementById('teamBottom');
+  if (!topSelect || !botSelect) return;
 
-    if (changedSide === 'top') {
-      botSelect.value = topSelect.value === '客隊' ? 'AIT' : '客隊';
-    } else {
-      topSelect.value = botSelect.value === '客隊' ? 'AIT' : '客隊';
-    }
-    calcScore();
-    applyRbiToScoreboard(scoreGame);
-    renderScoreboard();
+  // ==========================================================
+  // 先保存目前兩邊的每局分數
+  // 分數要跟著「球隊」移動，而不是跟著 Top / Bottom 位置
+  // ==========================================================
+  const topScores = [];
+  const botScores = [];
+
+  for (let i = 1; i <= 7; i++) {
+    const topInput = document.getElementById(`top_${i}`);
+    const botInput = document.getElementById(`bot_${i}`);
+
+    topScores.push(topInput ? topInput.value : '');
+    botScores.push(botInput ? botInput.value : '');
   }
+
+  // ==========================================================
+  // 保存目前隊伍名稱
+  // ==========================================================
+  const oldTopTeam = topSelect.value;
+  const oldBotTeam = botSelect.value;
+
+  // ==========================================================
+  // 原本的功能：  // 改變一邊時，另一邊自動變成另一支隊伍
+  // ==========================================================
+  if (changedSide === 'top') {
+    botSelect.value = oldTopTeam === '客隊' ? 'AIT' : '客隊';
+  } else {
+    topSelect.value = oldBotTeam === '客隊' ? 'AIT' : '客隊';
+  }
+
+  // ==========================================================
+  // 交換兩邊的每局分數
+  //
+  // 例如：
+  // 原本：
+  // Top = 客隊 → 1
+  // Bottom = AIT → 0
+  //
+  // Switch 後：
+  // Top = AIT → 0
+  // Bottom = 客隊 → 1
+  // ==========================================================
+  for (let i = 1; i <= 7; i++) {
+    const topInput = document.getElementById(`top_${i}`);
+    const botInput = document.getElementById(`bot_${i}`);
+
+    if (topInput) topInput.value = botScores[i - 1];
+    if (botInput) botInput.value = topScores[i - 1];
+  }
+
+  // 重新計算 R 總分
+  calcScore();
+
+  // 保留原本的打席紀錄 → 計分板連動
+  applyRbiToScoreboard(scoreGame);
+
+  // 重新渲染
+  renderScoreboard();
+}
 
   function saveScoreboard() {
     calcScore();
@@ -3221,6 +3546,7 @@ function renderPitchingRecordList(p) {
     const date = document.getElementById('matchDateInput').value;
     const start = document.getElementById('matchStartInput').value;
     const end = document.getElementById('matchEndInput').value;
+    const competition = document.getElementById('matchCompetitionInput')?.value || '';
     const teamA = document.getElementById('matchTeamAInput').value.trim();
 
     if (!date || !teamA) {
@@ -3232,7 +3558,9 @@ function renderPitchingRecordList(p) {
     schedule.matches.push({
       id: makeId(), date, start, end,
       teamA, teamB: 'AIT',
-      competition: isRichangCupGame(date) ? '里長杯' : '',
+      // Keep the existing 10/18–12/13 Richang Cup compatibility:
+      // explicit selection takes priority; otherwise the existing date rule remains.
+      competition: competition || (isRichangCupGame(date) ? '里長杯' : ''),
       game1: { scoreA: null, scoreB: null },
       game2: { scoreA: null, scoreB: null }
     });
@@ -3241,6 +3569,7 @@ function renderPitchingRecordList(p) {
     renderRecordsPage();
 
     document.getElementById('matchDateInput').value = '';
+    document.getElementById('matchCompetitionInput').value = '';
     document.getElementById('matchTeamAInput').value = '';
     showToast('已新增賽程');
   }
