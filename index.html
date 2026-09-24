@@ -18,7 +18,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
-    getFirestore, doc, setDoc, onSnapshot
+    getFirestore, doc, setDoc, getDoc, onSnapshot
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import {
     getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
@@ -39,7 +39,7 @@
   const auth = getAuth(app);
 
   window.__fb = {
-    db, doc, setDoc, onSnapshot,
+    db, doc, setDoc, getDoc, onSnapshot,
     auth, signInWithEmailAndPassword, signOut, onAuthStateChanged
   };
   window.__fbLoaded = true;
@@ -771,6 +771,169 @@
   }
   .match-date-wrap { display:flex; align-items:center; gap:3px; min-width:56px; }
 
+
+  /* ==================== PLAYER CARD / RPG SYSTEM ==================== */
+  .roster-view-toggle{
+    display:flex; gap:6px; margin-bottom:8px;
+  }
+  .roster-view-toggle button{
+    flex:1; font-size:12px; padding:8px 10px; font-weight:800;
+  }
+  .roster-view-toggle .active{
+    background:var(--brand-blue); color:#fff;
+  }
+
+  #rosterCardList{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(285px,1fr));
+    gap:14px;
+  }
+  .player-card-wrap{
+    display:flex; justify-content:center;
+    perspective:1000px;
+  }
+  .player-card{
+    position:relative;
+    width:100%; max-width:330px; min-height:470px;
+    border-radius:18px;
+    overflow:hidden;
+    cursor:pointer;
+    color:#fff;
+    background:
+      radial-gradient(circle at 15% 15%, rgba(255,255,255,.32), transparent 25%),
+      linear-gradient(145deg,#123b73 0%,#0b2348 42%,#1671a7 100%);
+    border:2px solid rgba(255,255,255,.55);
+    box-shadow:0 8px 18px rgba(0,42,94,.28), inset 0 0 0 1px rgba(255,255,255,.18);
+    transition:transform .16s ease, box-shadow .16s ease;
+  }
+  .player-card:active{ transform:scale(.985); }
+  .player-card::before{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:
+      linear-gradient(135deg,transparent 0 34%,rgba(255,255,255,.12) 34.2% 34.7%,transparent 35%),
+      linear-gradient(45deg,transparent 0 52%,rgba(255,255,255,.08) 52.2% 52.8%,transparent 53%),
+      linear-gradient(160deg,transparent 0 70%,rgba(255,255,255,.10) 70.2% 70.8%,transparent 71%);
+    opacity:.9;
+  }
+  .player-card-top{
+    position:relative; z-index:1;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 10px 4px; font-weight:900;
+  }
+  .player-card-diamond{
+    font-size:13px; letter-spacing:1px;
+    background:rgba(255,255,255,.18); padding:4px 8px; border-radius:6px;
+  }
+  .player-card-rating{
+    font-size:32px; line-height:1; color:#ffcc00;
+    text-shadow:0 2px 4px rgba(0,0,0,.35);
+  }
+  .player-card-photo{
+    position:relative; z-index:1;
+    width:92%; aspect-ratio:1.22/1; margin:0 auto;
+    border-radius:12px; overflow:hidden;
+    background:linear-gradient(145deg,#b7d9ee,#eef7fc);
+    border:2px solid rgba(255,255,255,.65);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .player-card-photo img{
+    width:100%; height:100%; object-fit:cover;
+  }
+  .player-card-photo .photo-placeholder{
+    font-size:58px; color:rgba(0,42,94,.42);
+    font-weight:900;
+  }
+  .player-card-name{
+    position:relative; z-index:1;
+    margin:7px 10px 2px; text-align:center;
+    font-size:21px; font-weight:900; letter-spacing:.5px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .player-card-sub{
+    position:relative; z-index:1;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0 12px 7px; font-size:11px; color:rgba(255,255,255,.88);
+  }
+  .player-card-position{ font-weight:800; }
+  .player-card-level{ font-weight:800; }
+  .player-card-stats{
+    position:relative; z-index:1;
+    display:grid; grid-template-columns:repeat(5,1fr);
+    margin:0 8px; padding:7px 4px 8px;
+    background:rgba(1,42,94,.72);
+    border-top:1px solid rgba(255,255,255,.28);
+    border-bottom:1px solid rgba(255,255,255,.28);
+  }
+  .player-card-stat{ text-align:center; }
+  .player-card-stat-label{ font-size:11px; font-weight:900; color:#fff; }
+  .player-card-stat-value{ font-size:21px; font-weight:900; color:#ffcc00; line-height:1.05; }
+  .player-card-exp{
+    position:relative; z-index:1;
+    display:flex; align-items:center; gap:7px;
+    padding:8px 12px 6px;
+  }
+  .player-card-exp-label{ font-size:11px; font-weight:900; width:38px; }
+  .player-card-exp-bar{
+    flex:1; height:8px; border-radius:5px; background:rgba(255,255,255,.2); overflow:hidden;
+  }
+  .player-card-exp-fill{
+    height:100%; background:#ffcc00; border-radius:5px;
+  }
+  .player-card-exp-value{ font-size:11px; font-weight:900; min-width:54px; text-align:right; }
+  .player-card-skills{
+    position:relative; z-index:1;
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:6px; padding:4px 10px 11px;
+  }
+  .player-card-skill{
+    min-height:36px; border-radius:8px;
+    border:1px solid rgba(255,255,255,.35);
+    background:rgba(255,255,255,.10);
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:800; text-align:center; padding:3px;
+  }
+  .player-card-skill.unlocked{
+    border-color:#ffcc00; background:rgba(255,204,0,.14);
+    color:#ffcc00;
+  }
+  .player-card-hint{
+    text-align:center; position:relative; z-index:1;
+    font-size:9px; color:rgba(255,255,255,.68); padding-bottom:7px;
+  }
+  .card-settings-grid{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:6px;
+  }
+  .card-settings-grid label{
+    font-size:10px; color:#636366; text-align:center;
+  }
+  .card-settings-grid input{
+    margin-top:3px; padding:8px 3px !important;
+    text-align:center; font-weight:800;
+  }
+  .photo-upload-row{
+    display:flex; align-items:center; gap:10px;
+  }
+  .photo-preview{
+    width:62px; height:62px; border-radius:10px; overflow:hidden;
+    background:#e5e5ea; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    color:#8e8e93; font-size:11px; font-weight:700; border:1px solid #d1d1d6;
+  }
+  .photo-preview img{ width:100%; height:100%; object-fit:cover; }
+  .photo-upload-info{ flex:1; min-width:0; }
+  .photo-upload-info input[type=file]{ width:100%; font-size:12px; }
+
+  .skill-modal-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:8px;
+  }
+  .skill-slot{
+    min-height:70px; border:2px dashed #c7c7cc; border-radius:12px;
+    background:#fff; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:4px;
+    color:#8e8e93; font-weight:800; font-size:12px;
+  }
+  .skill-slot.locked{ opacity:.6; }
+  .skill-slot .skill-slot-num{ font-size:10px; color:#b0b0b5; }
+
   @media (max-width:600px){
     body { padding-left:8px; padding-right:8px; }
     h1 { font-size:20px; }
@@ -791,6 +954,10 @@
     .bso-box { width:96px; }
     .records-card { padding:10px; }
     .records-card-title { align-items:flex-start; }
+    #rosterCardList { grid-template-columns:1fr; }
+    .player-card { max-width:340px; }
+    .card-settings-grid { gap:4px; }
+    .card-settings-grid input { font-size:14px !important; }
   }
 
 </style>
@@ -958,7 +1125,14 @@
         <button id="rosterSortNameBtn" class="btn-muted" onclick="setRosterSort('name')">姓名排序 A→Z</button>
         <button id="rosterSortCustomBtn" class="btn-add" onclick="setRosterSort('custom')">自定義順序</button>
       </div>
+
+      <div class="roster-view-toggle">
+        <button id="rosterListViewBtn" class="btn-add" onclick="setRosterViewMode('list')">☷ 名單模式</button>
+        <button id="rosterCardViewBtn" class="btn-muted" onclick="setRosterViewMode('card')">🃏 球員卡</button>
+      </div>
+
       <ul id="rosterList"></ul>
+      <div id="rosterCardList" style="display:none;"></div>
       <p id="rosterEmptyMsg" class="empty-msg">名單是空的，請先新增球員</p>
     </div>
   </div>
@@ -1310,6 +1484,29 @@
       </div>
     </div>
 
+    <div class="modal-form" style="margin-top:12px;">
+      <h3>🃏 PLAYER CARD</h3>
+      <div class="photo-upload-row">
+        <div class="photo-preview" id="playerPhotoPreview">PHOTO</div>
+        <div class="photo-upload-info">
+          <label>球員大頭照（建議正面照片）</label>
+          <input type="file" id="playerPhotoInput" accept="image/*" onchange="handlePlayerPhotoUpload(this)" />
+          <button type="button" class="btn-muted" style="margin-top:6px;width:100%;" onclick="markAttendanceToday()">📅 今日出席 +5 EXP</button>
+        </div>
+      </div>
+      <div id="attendanceInfo" style="font-size:11px;color:#636366;margin-top:7px;"></div>
+
+      <div style="margin-top:12px;font-size:12px;font-weight:800;color:var(--brand-blue-dark);">能力值（依生涯紀錄自動計算，可手動覆寫）</div>
+      <div class="card-settings-grid">
+        <div><label>CON</label><input type="number" min="0" max="99" id="cardStatCON" placeholder="AUTO" onchange="updateManualCardStat('con',this.value)" /></div>
+        <div><label>POW</label><input type="number" min="0" max="99" id="cardStatPOW" placeholder="AUTO" onchange="updateManualCardStat('pow',this.value)" /></div>
+        <div><label>EYE</label><input type="number" min="0" max="99" id="cardStatEYE" placeholder="AUTO" onchange="updateManualCardStat('eye',this.value)" /></div>
+        <div><label>SPD</label><input type="number" min="0" max="99" id="cardStatSPD" placeholder="AUTO" onchange="updateManualCardStat('spd',this.value)" /></div>
+        <div><label>FLD</label><input type="number" min="0" max="99" id="cardStatFLD" placeholder="AUTO" onchange="updateManualCardStat('fld',this.value)" /></div>
+      </div>
+      <button type="button" class="btn-muted" style="width:100%;margin-top:8px;" onclick="resetManualCardStats()">↺ 使用自動計算值</button>
+    </div>
+
     <!-- 個人紀錄切換：主守位 / 副守位 / Batting / Pitching -->
     <div class="player-stat-tabs">
       <button type="button" id="playerTabBatting" class="player-stat-tab active" onclick="switchPlayerStatTab('batting')">Batting</button>
@@ -1378,6 +1575,19 @@
         <button class="btn-add" style="width:100%;margin-top:12px;" onclick="savePitchingRecord()">新增紀錄</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- 🃏 PLAYER CARD 技能 Modal -->
+<div id="skillModalOverlay" class="modal-overlay" onclick="closeSkillModalOnOverlay(event)" style="align-items:center;">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:390px;border-radius:18px;">
+    <div class="modal-header">
+      <span id="skillModalTitle" style="font-weight:800;font-size:16px;flex:1;">PLAYER SKILLS</span>
+      <button class="modal-close" onclick="closeSkillModal()">✕</button>
+    </div>
+    <div class="modal-summary" id="skillModalSummary"></div>
+    <div class="skill-modal-grid" id="skillModalGrid"></div>
+    <button class="btn-muted" style="width:100%;margin-top:12px;" onclick="closeSkillModal()">完成</button>
   </div>
 </div>
 
@@ -1452,6 +1662,9 @@
 
   let roster = [];
   let rosterSort = 'custom';
+  let rosterViewMode = 'list';
+  const playerPhotoCache = {};
+  let currentSkillPlayerId = null;
   let lineups = { game1: [], game2: [] };
   let boxScore = {};
   let scoreboards = {};
@@ -1588,6 +1801,107 @@ onSnapshot(teamRef, (docSnap) => {
   function displayNumber(num) { return (num !== undefined && num !== null && num !== '') ? num : '—'; }
   function todayStr() { return new Date().toISOString().slice(0,10); }
 
+  function teamTodayStr() {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Taipei', year:'numeric', month:'2-digit', day:'2-digit'
+    }).formatToParts(new Date());
+    const get = type => parts.find(x => x.type === type)?.value;
+    return `${get('year')}-${get('month')}-${get('day')}`;
+  }
+
+  function currentYearStr() {
+    return teamTodayStr().slice(0,4);
+  }
+
+  function ensurePlayerGameFields(p) {
+    if (!p.attendanceRecords) p.attendanceRecords = [];
+    if (!p.skills) p.skills = ['', '', '', ''];
+    if (!p.cardStats) p.cardStats = {};
+    return p;
+  }
+
+  function getAnnualGameProgress(p) {
+    ensurePlayerGameFields(p);
+    const year = currentYearStr();
+    const uniqueDays = [...new Set(p.attendanceRecords.filter(d => String(d).slice(0,4) === year))];
+    const attendance = uniqueDays.length;
+    const exp = Math.min(100, attendance * 5);
+    const level = Math.min(10, Math.floor(exp / 10) + 1);
+    return { year, attendance, exp, level, skillUnlocked: attendance >= 20 };
+  }
+
+  function clampCardStat(value, fallback) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(0, Math.min(99, Math.round(n)));
+  }
+
+  function calculateAutoCardStats(p) {
+    const s = computeStats(p);
+    const pa = s.ab + s.bb;
+    const factor = pa > 0 ? 150 / pa : 0;
+    const annualHits = s.hits * factor;
+    const annualSpeed = (s.singles + s.fc) * factor;
+
+    let con = 70;
+    if (annualHits >= 100) con = 90;
+    else if (annualHits >= 90) con = 85;
+    else if (annualHits >= 85) con = 80;
+    else if (annualHits >= 80) con = 75;
+
+    let pow = 70;
+    if (s.slg !== null) {
+      if (s.slg >= 0.90) pow = 90;
+      else if (s.slg >= 0.80) pow = 80;
+    }
+
+    let eye = 70;
+    if (s.obp !== null) {
+      if (s.obp >= 0.60) eye = 90;
+      else if (s.obp >= 0.50) eye = 80;
+      else if (s.obp >= 0.40) eye = 70;
+    }
+
+    let spd = 70;
+    if (annualSpeed >= 100) spd = 90;
+    else if (annualSpeed >= 90) spd = 85;
+    else if (annualSpeed >= 85) spd = 80;
+    else if (annualSpeed >= 80) spd = 75;
+
+    const fldMap = {
+      'SS':90, 'CF':90,
+      '2B':85, 'LF':85,
+      '3B':80, 'SF':80,
+      '1B':75,
+      'RF':60, 'C':60
+    };
+    const fld = fldMap[p.primary] ?? 70;
+
+    return { con, pow, eye, spd, fld, annualPA: pa * factor, annualHits, annualSpeed };
+  }
+
+  function getCardStats(p) {
+    ensurePlayerGameFields(p);
+    const auto = calculateAutoCardStats(p);
+    const manual = p.cardStats || {};
+    return {
+      con: clampCardStat(manual.con, auto.con),
+      pow: clampCardStat(manual.pow, auto.pow),
+      eye: clampCardStat(manual.eye, auto.eye),
+      spd: clampCardStat(manual.spd, auto.spd),
+      fld: clampCardStat(manual.fld, auto.fld),
+      auto
+    };
+  }
+
+  function formatCardRating(stats) {
+    return Math.round((stats.con + stats.pow + stats.eye + stats.spd + stats.fld) / 5);
+  }
+
+  function playerPhotoDocId(id) {
+    return `${TEAM_DOC_ID}_${id}`;
+  }
+
   function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg; t.classList.add('show');
@@ -1697,6 +2011,7 @@ onSnapshot(teamRef, (docSnap) => {
 
   function renderRoster() {
     const container = document.getElementById('rosterList');
+    const cardContainer = document.getElementById('rosterCardList');
     const emptyMsg = document.getElementById('rosterEmptyMsg');
     const search = document.getElementById('rosterSearch');
     if (!container) return;
@@ -1747,6 +2062,103 @@ onSnapshot(teamRef, (docSnap) => {
     });
 
     attachRosterDragHandlers();
+    if (rosterViewMode === 'card') renderPlayerCards(filtered);
+    updateRosterViewButtons();
+  }
+
+  function setRosterViewMode(mode) {
+    rosterViewMode = mode === 'card' ? 'card' : 'list';
+    renderRoster();
+  }
+
+  function updateRosterViewButtons() {
+    const listBtn = document.getElementById('rosterListViewBtn');
+    const cardBtn = document.getElementById('rosterCardViewBtn');
+    const list = document.getElementById('rosterList');
+    const cards = document.getElementById('rosterCardList');
+    if (!list || !cards) return;
+    const isCard = rosterViewMode === 'card';
+    list.style.display = isCard ? 'none' : '';
+    cards.style.display = isCard ? 'grid' : 'none';
+    listBtn?.classList.toggle('active', !isCard);
+    cardBtn?.classList.toggle('active', isCard);
+    const emptyMsg = document.getElementById('rosterEmptyMsg');
+    if (emptyMsg) emptyMsg.style.display = roster.length ? 'none' : 'block';
+  }
+
+  async function loadPlayerPhoto(playerId) {
+    if (Object.prototype.hasOwnProperty.call(playerPhotoCache, playerId)) {
+      return playerPhotoCache[playerId];
+    }
+    try {
+      const { db, doc, getDoc } = window.__fb;
+      const snap = await getDoc(doc(db, 'playerPhotos', playerPhotoDocId(playerId)));
+      const data = snap.exists() ? (snap.data().data || '') : '';
+      playerPhotoCache[playerId] = data;
+      return data;
+    } catch (err) {
+      console.warn('讀取球員照片失敗：', err);
+      playerPhotoCache[playerId] = '';
+      return '';
+    }
+  }
+
+  function renderPlayerCards(players) {
+    const container = document.getElementById('rosterCardList');
+    if (!container) return;
+    if (!players.length) {
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = players.map(p => {
+      ensurePlayerGameFields(p);
+      const stats = getCardStats(p);
+      const progress = getAnnualGameProgress(p);
+      const skills = (p.skills || ['', '', '', '']).slice(0,4);
+      const position = p.primary || '—';
+      return `
+        <div class="player-card-wrap">
+          <div class="player-card" onclick="openPlayerSkillModal('${p.id}')" data-card-player-id="${p.id}">
+            <div class="player-card-top">
+              <span class="player-card-diamond">DIAMOND</span>
+              <span class="player-card-rating">${formatCardRating(stats)}</span>
+            </div>
+            <div class="player-card-photo" id="cardPhoto_${p.id}">
+              <span class="photo-placeholder">#${escapeHtml(String(p.number || ''))}</span>
+            </div>
+            <div class="player-card-name">${escapeHtml(p.name || 'PLAYER')}</div>
+            <div class="player-card-sub">
+              <span class="player-card-position">${escapeHtml(position)} ${p.secondary ? '/ '+escapeHtml(p.secondary) : ''}</span>
+              <span class="player-card-level">Lv. ${String(progress.level).padStart(2,'0')}/10</span>
+            </div>
+            <div class="player-card-stats">
+              <div class="player-card-stat"><div class="player-card-stat-label">CON</div><div class="player-card-stat-value">${stats.con}</div></div>
+              <div class="player-card-stat"><div class="player-card-stat-label">POW</div><div class="player-card-stat-value">${stats.pow}</div></div>
+              <div class="player-card-stat"><div class="player-card-stat-label">EYE</div><div class="player-card-stat-value">${stats.eye}</div></div>
+              <div class="player-card-stat"><div class="player-card-stat-label">SPD</div><div class="player-card-stat-value">${stats.spd}</div></div>
+              <div class="player-card-stat"><div class="player-card-stat-label">FLD</div><div class="player-card-stat-value">${stats.fld}</div></div>
+            </div>
+            <div class="player-card-exp">
+              <span class="player-card-exp-label">EXP</span>
+              <div class="player-card-exp-bar"><div class="player-card-exp-fill" style="width:${progress.exp}%"></div></div>
+              <span class="player-card-exp-value">${progress.exp}/100</span>
+            </div>
+            <div class="player-card-skills">
+              ${skills.map((skill,i) => `<div class="player-card-skill ${progress.skillUnlocked?'unlocked':''}">${skill ? escapeHtml(skill) : `<span>SKILL ${i+1}</span>`}</div>`).join('')}
+            </div>
+            <div class="player-card-hint">${progress.skillUnlocked ? '點擊卡片：選擇 / 編輯技能' : `出席 ${progress.attendance}/20 場後解鎖技能`}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    players.forEach(p => {
+      loadPlayerPhoto(p.id).then(data => {
+        const box = document.getElementById(`cardPhoto_${p.id}`);
+        if (!box || !data) return;
+        box.innerHTML = `<img src="${data}" alt="${escapeHtml(p.name || 'player')}">`;
+      });
+    });
   }
 
   function setRosterSort(mode) {
@@ -1761,7 +2173,7 @@ onSnapshot(teamRef, (docSnap) => {
     const name = nameInput.value.trim();
     const number = numberInput.value.trim();
     if (!name) return;
-    roster.push({ id: makeId(), name, number, primary:'', secondary:'', records:[], pitchingRecords:[] });
+    roster.push({ id: makeId(), name, number, primary:'', secondary:'', records:[], pitchingRecords:[], attendanceRecords:[], cardStats:{}, skills:['','','',''] });
     nameInput.value=''; numberInput.value='';
     saveRoster(); renderRoster(); showToast('已加入球員名單');
   }
@@ -1785,11 +2197,15 @@ onSnapshot(teamRef, (docSnap) => {
     if (!p) return;
     if (!p.records) p.records=[];
     if (!p.pitchingRecords) p.pitchingRecords=[];
+    ensurePlayerGameFields(p);
 
     document.getElementById('modalNumberInput').value = p.number || '';
     document.getElementById('modalNameInput').value = p.name || '';
     document.getElementById('primaryPosSelect').innerHTML = positionOptions(p.primary,true);
     document.getElementById('secondaryPosSelect').innerHTML = positionOptions(p.secondary,true);
+    renderPlayerPhotoPreview(p);
+    renderCardStatInputs(p);
+    renderAttendanceInfo(p);
     document.getElementById('recordDate').value = todayStr();
     document.getElementById('pitchRecordDate').value = todayStr();
     ['rec1B','rec2B','rec3B','recHR','recBB','recE','recFC','recOuts'].forEach(id2 => {
@@ -1811,8 +2227,179 @@ onSnapshot(teamRef, (docSnap) => {
   function closeModalOnOverlay(e) { if (e.target.id === 'modalOverlay') closeModal(); }
   function updateModalName(value) { const p = findPlayerById(currentModalPlayerId); if (!p) return; p.name = value; saveRoster(); }
   function updateModalNumber(value) { const p = findPlayerById(currentModalPlayerId); if (!p) return; p.number = value.trim(); saveRoster(); }
-  function updateModalPrimary(value) { const p = findPlayerById(currentModalPlayerId); if (!p) return; p.primary = value; saveRoster(); }
-  function updateModalSecondary(value) { const p = findPlayerById(currentModalPlayerId); if (!p) return; p.secondary = value; saveRoster(); }
+  function updateModalPrimary(value) { const p = findPlayerById(currentModalPlayerId); if (!p) return; p.primary = value; saveRoster(); renderCardStatInputs(p); renderRoster(); }
+  function updateModalSecondary(value) { const p = findPlayerById(currentModalPlayerId); if (!p) return; p.secondary = value; saveRoster(); renderCardStatInputs(p); }
+
+  function renderPlayerPhotoPreview(p) {
+    const box = document.getElementById('playerPhotoPreview');
+    if (!box) return;
+    loadPlayerPhoto(p.id).then(data => {
+      if (!box) return;
+      box.innerHTML = data ? `<img src="${data}" alt="${escapeHtml(p.name || 'player')}">` : 'PHOTO';
+    });
+  }
+
+  async function handlePlayerPhotoUpload(input) {
+    const p = findPlayerById(currentModalPlayerId);
+    const file = input?.files?.[0];
+    if (!p || !file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('請選擇圖片檔案');
+      input.value = '';
+      return;
+    }
+
+    try {
+      const dataUrl = await compressPlayerPhoto(file);
+      const { db, doc, setDoc } = window.__fb;
+      await setDoc(doc(db, 'playerPhotos', playerPhotoDocId(p.id)), {
+        playerId: p.id,
+        teamId: TEAM_DOC_ID,
+        data: dataUrl,
+        updatedAt: Date.now()
+      }, { merge:true });
+      playerPhotoCache[p.id] = dataUrl;
+      renderPlayerPhotoPreview(p);
+      renderRoster();
+      showToast('球員照片已更新');
+    } catch (err) {
+      console.error('球員照片上傳失敗：', err);
+      showToast('照片上傳失敗，請確認 Firebase 權限');
+    } finally {
+      input.value = '';
+    }
+  }
+
+  function compressPlayerPhoto(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const maxSize = 420;
+          const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.78));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function renderCardStatInputs(p) {
+    ensurePlayerGameFields(p);
+    const stats = getCardStats(p);
+    const fields = { con:'cardStatCON', pow:'cardStatPOW', eye:'cardStatEYE', spd:'cardStatSPD', fld:'cardStatFLD' };
+    Object.entries(fields).forEach(([key,id]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const manual = p.cardStats?.[key];
+      el.value = manual === undefined || manual === null || manual === '' ? '' : manual;
+      el.placeholder = String(stats.auto[key]);
+    });
+  }
+
+  function updateManualCardStat(key, value) {
+    const p = findPlayerById(currentModalPlayerId);
+    if (!p) return;
+    ensurePlayerGameFields(p);
+    if (value === '') {
+      delete p.cardStats[key];
+    } else {
+      p.cardStats[key] = clampCardStat(value, calculateAutoCardStats(p)[key]);
+    }
+    saveRoster();
+    renderCardStatInputs(p);
+    renderRoster();
+  }
+
+  function resetManualCardStats() {
+    const p = findPlayerById(currentModalPlayerId);
+    if (!p) return;
+    p.cardStats = {};
+    saveRoster();
+    renderCardStatInputs(p);
+    renderRoster();
+    showToast('已恢復自動能力值');
+  }
+
+  function renderAttendanceInfo(p) {
+    const info = document.getElementById('attendanceInfo');
+    if (!info) return;
+    const progress = getAnnualGameProgress(p);
+    info.innerHTML = `本年度出席：<b>${progress.attendance}/20</b> 場　・　EXP <b>${progress.exp}/100</b>${progress.skillUnlocked ? '　🟨 技能已解鎖' : ''}`;
+  }
+
+  function markAttendanceToday() {
+    const p = findPlayerById(currentModalPlayerId);
+    if (!p) return;
+    ensurePlayerGameFields(p);
+    const today = teamTodayStr();
+    if (p.attendanceRecords.includes(today)) {
+      showToast('今天已記錄出席，不會重複增加 EXP');
+      return;
+    }
+    p.attendanceRecords.push(today);
+    saveRoster();
+    renderAttendanceInfo(p);
+    renderRoster();
+    showToast('📅 出席已記錄 +5 EXP');
+  }
+
+  function openPlayerSkillModal(id) {
+    const p = findPlayerById(id);
+    if (!p) return;
+    ensurePlayerGameFields(p);
+    currentSkillPlayerId = id;
+    const progress = getAnnualGameProgress(p);
+    const grid = document.getElementById('skillModalGrid');
+    const summary = document.getElementById('skillModalSummary');
+    summary.innerHTML = progress.skillUnlocked
+      ? `Lv. <b>${String(progress.level).padStart(2,'0')}/10</b> ・ EXP <b>${progress.exp}/100</b><br>已完成 20 場出席，4 個技能欄位已解鎖。技能選擇內容可在後續版本補入。`
+      : `目前 EXP <b>${progress.exp}/100</b> ・ 出席 <b>${progress.attendance}/20</b> 場<br>再累積 ${20-progress.attendance} 場出席即可解鎖 4 個技能欄位。`;
+
+    grid.innerHTML = [0,1,2,3].map(i => {
+      const skill = p.skills[i] || '';
+      if (progress.skillUnlocked) {
+        return `<div class="skill-slot">
+          <span class="skill-slot-num">SKILL ${i+1}</span>
+          <input type="text" value="${escapeHtml(skill)}" placeholder="輸入技能名稱"
+            style="width:100%;padding:6px 4px;text-align:center;font-size:11px;"
+            oninput="updatePlayerSkill(${i},this.value)">
+        </div>`;
+      }
+      return `<div class="skill-slot locked">
+        <span class="skill-slot-num">SKILL ${i+1}</span>
+        <span>🔒 未解鎖</span>
+      </div>`;
+    }).join('');
+    document.getElementById('skillModalOverlay').classList.add('show');
+  }
+
+  function updatePlayerSkill(index, value) {
+    const p = findPlayerById(currentSkillPlayerId);
+    if (!p) return;
+    ensurePlayerGameFields(p);
+    p.skills[index] = String(value || '').trim();
+    saveRoster();
+    renderRoster();
+  }
+
+  function closeSkillModal() {
+    document.getElementById('skillModalOverlay').classList.remove('show');
+    currentSkillPlayerId = null;
+  }
+  function closeSkillModalOnOverlay(e) {
+    if (e.target.id === 'skillModalOverlay') closeSkillModal();
+  }
 
   function renderModalSummary(p) {
     const s = computeStats(p);
