@@ -231,16 +231,18 @@
   }
   .roster-number.empty { background: #e5e5ea; color: #c7c7cc; }
   .roster-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  .roster-name-btn {
+ .roster-heading { display:flex; align-items:center; flex-wrap:nowrap; gap:3px 5px; min-width:0; flex:1; }
+  .roster-title-input { width:70px !important; min-width:0 !important; flex:0 0 70px; padding:3px 4px !important; font-size:10px !important; height:25px; border:1px solid #d1d1d6; border-radius:5px; margin: 0 auto; }
+.roster-name-btn {
     text-align: left; background: none; border: none; padding: 3px 2px 0;
     font-size: 14px; font-weight: 600; color: #1c1c1e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    font-family: inherit;
+    font-family: inherit; display: flex; flex-direction: column; flex: 1; min-width: 0; cursor: pointer;
   }
   .roster-pos-line { font-size: 10.5px; color: #636366; padding: 0 2px; }
   .roster-pos-line .primary-tag { color: var(--brand-blue); font-weight: 700; }
   .roster-pos-line .secondary-tag { color: #8e8e93; }
   .roster-stats { flex-shrink: 0; font-size: 10.5px; color: #48484a; width: 78px; text-align:center; white-space:nowrap; }
-  .roster-badge { flex-shrink:0; font-size:10px; padding:2px 5px; border-radius:5px; background:#e3f7e6; color:#1a7a2e; margin-right:2px; }
+  .roster-badge { flex-shrink:0; font-size:10px; padding:2px 5px; border-radius:5px; background:#e3f7e6; color:#1a7a2e; margin-left: auto; margin-right: 8px; white-space:nowrap; }
   .roster-trash { background:#ffe5e5; color:var(--brand-red); width:26px; height:26px; font-size:12px; padding:0; border-radius:13px; flex-shrink:0; }
 
   .modal-number-input {
@@ -252,7 +254,7 @@
   .pos-row > div { flex: 1; }
   .pos-row select { width: 100%; padding: 10px; font-size: 15px; border: 1px solid #d1d1d6; border-radius: 8px; background: white; -webkit-appearance: none; }
   .pos-row label { font-size: 12px; color: #636366; display: block; margin: 0 0 4px; }
-  .stat-input-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; }
+  .stat-input-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
 
   .game-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
   .game-tab {
@@ -602,6 +604,8 @@
   .outcome-btn.res-HR { background: #34c759; }
   .outcome-btn.res-BB { background: #5856d6; }
   .outcome-btn.res-E { background: #ff2d55; }
+  .outcome-btn.res-SF { background: #168b70; }
+  .outcome-btn.res-DP { background: #6e6e73; }
   .outcome-btn.res-FC { background: #ff9500; }
   .outcome-btn.res-OUT { background: #8e8e93; }
 
@@ -945,8 +949,9 @@
     li.roster-row { padding:6px 4px; gap:3px; }
     .roster-name-btn { font-size:13px; }
     .roster-pos-line { font-size:10px; }
-    .roster-stats { width:72px; font-size:10px; }
-    .roster-badge { display:none; }
+    .roster-stats { width:68px; font-size:9.5px; }
+    .roster-title-input { width:58px !important; flex-basis:58px; font-size:10px !important; }
+    .roster-badge { font-size:9px; padding:2px 4px; }
     .match-header-row,.match-sub-row { padding-right:28px; gap:5px; }
     .match-date-big { font-size:21px; min-width:48px; }
     .match-team-name-display { font-size:13px; }
@@ -1291,6 +1296,7 @@
     <h2>打席紀錄表
       <span class="section-actions">
         <span id="boxSaveIndicator" class="save-indicator" style="display:none;">● 尚未儲存</span>
+        <button class="btn-muted" onclick="refreshBoxScoreLineup()">↻ 更新</button>
         <button class="btn-add" onclick="saveBoxScoreToday()">💾 SAVE</button>
       </span>
     </h2>
@@ -1484,30 +1490,7 @@
       </div>
     </div>
 
-    <div class="modal-form" style="margin-top:12px;">
-      <h3>🃏 PLAYER CARD</h3>
-      <div class="photo-upload-row">
-        <div class="photo-preview" id="playerPhotoPreview">PHOTO</div>
-        <div class="photo-upload-info">
-          <label>球員大頭照（建議正面照片）</label>
-          <input type="file" id="playerPhotoInput" accept="image/*" onchange="handlePlayerPhotoUpload(this)" />
-          <button type="button" class="btn-muted" style="margin-top:6px;width:100%;" onclick="markAttendanceToday()">📅 今日出席 +5 EXP</button>
-        </div>
-      </div>
-      <div id="attendanceInfo" style="font-size:11px;color:#636366;margin-top:7px;"></div>
-
-      <div style="margin-top:12px;font-size:12px;font-weight:800;color:var(--brand-blue-dark);">能力值（依生涯紀錄自動計算，可手動覆寫）</div>
-      <div class="card-settings-grid">
-        <div><label>CON</label><input type="number" min="0" max="99" id="cardStatCON" placeholder="AUTO" onchange="updateManualCardStat('con',this.value)" /></div>
-        <div><label>POW</label><input type="number" min="0" max="99" id="cardStatPOW" placeholder="AUTO" onchange="updateManualCardStat('pow',this.value)" /></div>
-        <div><label>EYE</label><input type="number" min="0" max="99" id="cardStatEYE" placeholder="AUTO" onchange="updateManualCardStat('eye',this.value)" /></div>
-        <div><label>SPD</label><input type="number" min="0" max="99" id="cardStatSPD" placeholder="AUTO" onchange="updateManualCardStat('spd',this.value)" /></div>
-        <div><label>FLD</label><input type="number" min="0" max="99" id="cardStatFLD" placeholder="AUTO" onchange="updateManualCardStat('fld',this.value)" /></div>
-      </div>
-      <button type="button" class="btn-muted" style="width:100%;margin-top:8px;" onclick="resetManualCardStats()">↺ 使用自動計算值</button>
-    </div>
-
-    <!-- 個人紀錄切換：主守位 / 副守位 / Batting / Pitching -->
+    <!-- 個人紀錄分頁 -->
     <div class="player-stat-tabs">
       <button type="button" id="playerTabBatting" class="player-stat-tab active" onclick="switchPlayerStatTab('batting')">Batting</button>
       <button type="button" id="playerTabPitching" class="player-stat-tab" onclick="switchPlayerStatTab('pitching')">Pitching</button>
@@ -1530,17 +1513,10 @@
       <input type="date" id="recordDate" />
       
       <div class="stat-input-row">
-        <div><label>一安 1B</label><input type="number" min="0" id="rec1B" value="0" /></div>
-        <div><label>二安 2B</label><input type="number" min="0" id="rec2B" value="0" /></div>
-        <div><label>三安 3B</label><input type="number" min="0" id="rec3B" value="0" /></div>
-        <div><label>全壘打 HR</label><input type="number" min="0" id="recHR" value="0" /></div>
+        <div><label>一安 1B</label><input type="number" min="0" id="rec1B" value="0" /></div><div><label>二安 2B</label><input type="number" min="0" id="rec2B" value="0" /></div><div><label>三安 3B</label><input type="number" min="0" id="rec3B" value="0" /></div><div><label>全壘打 HR</label><input type="number" min="0" id="recHR" value="0" /></div><div><label>四壞 BB</label><input type="number" min="0" id="recBB" value="0" /></div>
       </div>
-      
       <div class="stat-input-row">
-        <div><label>四壞 BB</label><input type="number" min="0" id="recBB" value="0" /></div>
-        <div><label>失誤 E</label><input type="number" min="0" id="recE" value="0" /></div>
-        <div><label>野選 FC</label><input type="number" min="0" id="recFC" value="0" /></div>
-        <div><label>出局 Out</label><input type="number" min="0" id="recOuts" value="0" /></div>
+        <div><label>失誤 E</label><input type="number" min="0" id="recE" value="0" /></div><div><label>高飛犧牲打 SF</label><input type="number" min="0" id="recSF" value="0" /></div><div><label>野選 FC</label><input type="number" min="0" id="recFC" value="0" /></div><div><label>出局 OUT</label><input type="number" min="0" id="recOuts" value="0" /></div><div><label>打點 RBI</label><input type="number" min="0" id="recRBI" value="0" /></div>
       </div>
       
       <button class="btn-add" style="width:100%;margin-top:12px;" onclick="saveRecord()">新增紀錄</button>
@@ -1587,6 +1563,26 @@
     </div>
     <div class="modal-summary" id="skillModalSummary"></div>
     <div class="skill-modal-grid" id="skillModalGrid"></div>
+    <div class="modal-form" style="margin-top:12px;">
+      <h3>🃏 球員卡設定</h3>
+      <div class="photo-upload-row">
+        <div class="photo-preview" id="skillPlayerPhotoPreview">PHOTO</div>
+        <div class="photo-upload-info">
+          <label>球員大頭照（建議正面照片）</label>
+          <input type="file" id="skillPlayerPhotoInput" accept="image/*" onchange="handlePlayerPhotoUpload(this)" />
+        </div>
+      </div>
+      <div id="skillAttendanceInfo" style="font-size:11px;color:#636366;margin-top:7px;"></div>
+      <div style="margin-top:12px;font-size:12px;font-weight:800;color:var(--brand-blue-dark);">能力值（依生涯紀錄自動計算，可手動覆寫）</div>
+      <div class="card-settings-grid">
+        <div><label>CON</label><input type="number" min="0" max="99" id="skillCardStatCON" placeholder="AUTO" onchange="updateManualCardStat('con',this.value)" /></div>
+        <div><label>POW</label><input type="number" min="0" max="99" id="skillCardStatPOW" placeholder="AUTO" onchange="updateManualCardStat('pow',this.value)" /></div>
+        <div><label>EYE</label><input type="number" min="0" max="99" id="skillCardStatEYE" placeholder="AUTO" onchange="updateManualCardStat('eye',this.value)" /></div>
+        <div><label>SPD</label><input type="number" min="0" max="99" id="skillCardStatSPD" placeholder="AUTO" onchange="updateManualCardStat('spd',this.value)" /></div>
+        <div><label>FLD</label><input type="number" min="0" max="99" id="skillCardStatFLD" placeholder="AUTO" onchange="updateManualCardStat('fld',this.value)" /></div>
+      </div>
+      <button type="button" class="btn-muted" style="width:100%;margin-top:8px;" onclick="resetManualCardStats()">↺ 使用自動計算值</button>
+    </div>
     <button class="btn-muted" style="width:100%;margin-top:12px;" onclick="closeSkillModal()">完成</button>
   </div>
 </div>
@@ -1599,14 +1595,16 @@
       <button class="modal-close" onclick="closeBoxPicker()">✕</button>
     </div>
     <div class="outcome-grid">
-      <div class="outcome-hit-wrap"><select id="rbi-1B" class="outcome-rbi" aria-label="一安 RBI"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-1B" onclick="chooseBoxResult('1B')">一安</button></div>
-      <div class="outcome-hit-wrap"><select id="rbi-2B" class="outcome-rbi" aria-label="二安 RBI"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-2B" onclick="chooseBoxResult('2B')">二安</button></div>
-      <div class="outcome-hit-wrap"><select id="rbi-3B" class="outcome-rbi" aria-label="三安 RBI"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-3B" onclick="chooseBoxResult('3B')">三安</button></div>
-      <div class="outcome-hit-wrap"><select id="rbi-HR" class="outcome-rbi" aria-label="全壘打 RBI"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-HR" onclick="chooseBoxResult('HR')">全壘打</button></div>
-      <button class="outcome-btn res-BB" onclick="chooseBoxResult('BB')">四壞</button>
-      <button class="outcome-btn res-E" onclick="chooseBoxResult('E')">失誤</button>
-      <button class="outcome-btn res-FC" onclick="chooseBoxResult('FC')">野選</button>
-      <button class="outcome-btn res-OUT" onclick="chooseBoxResult('OUT')">出局</button>
+      <div class="outcome-hit-wrap"><select id="rbi-1B" class="outcome-rbi" aria-label="一安 RBI"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-1B" onclick="chooseBoxResult('1B')">1B</button></div>
+      <div class="outcome-hit-wrap"><select id="rbi-2B" class="outcome-rbi" aria-label="二安 RBI"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-2B" onclick="chooseBoxResult('2B')">2B</button></div>
+      <div class="outcome-hit-wrap"><select id="rbi-3B" class="outcome-rbi" aria-label="三安 RBI"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-3B" onclick="chooseBoxResult('3B')">3B</button></div>
+      <div class="outcome-hit-wrap"><select id="rbi-HR" class="outcome-rbi" aria-label="全壘打 RBI"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-HR" onclick="chooseBoxResult('HR')">HR</button></div>
+      <div class="outcome-hit-wrap"><select id="rbi-BB" class="outcome-rbi"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-BB" onclick="chooseBoxResult('BB')">BB</button></div>
+      <div class="outcome-hit-wrap"><select id="rbi-SF" class="outcome-rbi"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-SF" onclick="chooseBoxResult('SF')">SF</button></div>
+      <div class="outcome-hit-wrap"><select id="rbi-E" class="outcome-rbi"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-E" onclick="chooseBoxResult('E')">E</button></div>
+      <div class="outcome-hit-wrap"><select id="rbi-FC" class="outcome-rbi"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-FC" onclick="chooseBoxResult('FC')">FC</button></div>
+      <button class="outcome-btn res-DP" onclick="chooseBoxResult('DP')">雙殺 DP</button>
+      <button class="outcome-btn res-OUT" onclick="chooseBoxResult('OUT')">出局 OUT</button>
     </div>
   </div>
 </div>
@@ -1994,19 +1992,20 @@ onSnapshot(teamRef, (docSnap) => {
 
   function computeStats(player) {
     const records = player.records || [];
-    let singles=0, doubles=0, triples=0, hr=0, bb=0, fc=0, errors=0, outs=0, rbi=0;
+    let singles=0, doubles=0, triples=0, hr=0, bb=0, fc=0, sf=0, errors=0, outs=0, rbi=0;
     records.forEach(r => {
       singles += Number(r.singles)||0; doubles += Number(r.doubles)||0; triples += Number(r.triples)||0;
-      hr += Number(r.hr)||0; bb += Number(r.bb)||0; fc += Number(r.fc)||0; errors += Number(r.errors)||0; outs += Number(r.outs)||0;
+      hr += Number(r.hr)||0; bb += Number(r.bb)||0; fc += Number(r.fc)||0; sf += Number(r.sf)||0; errors += Number(r.errors)||0; outs += Number(r.outs)||0;
       rbi += Number(r.rbi)||0;
     });
     const hits = singles+doubles+triples+hr;
     const ab = hits+outs+fc+errors;
     const totalBases = singles*1+doubles*2+triples*3+hr*4;
     const avg = ab>0 ? hits/ab : null;
-    const obp = (ab+bb)>0 ? (hits+bb)/(ab+bb) : null;
+    const obp = (ab+bb+sf)>0 ? (hits+bb)/(ab+bb+sf) : null;
     const slg = ab>0 ? totalBases/ab : null;
-    return { games: records.length, singles,doubles,triples,hr,bb,fc,errors,outs,rbi,hits,ab,totalBases,avg,obp,slg };
+    const ops = (obp !== null && slg !== null) ? obp + slg : null;
+    return { games: records.length, singles,doubles,triples,hr,bb,fc,sf,errors,outs,rbi,hits,ab,totalBases,avg,obp,slg,ops };
   }
 
   function renderRoster() {
@@ -2049,10 +2048,13 @@ onSnapshot(teamRef, (docSnap) => {
         <div class="roster-handle" data-player-id="${p.id}" title="長按後上下拖曳排序">⠿</div>
         <div class="roster-number ${p.number ? '' : 'empty'}">${displayNumber(p.number)}</div>
         <div class="roster-main">
-          <button class="roster-name-btn" onclick="openModal('${p.id}')">${escapeHtml(p.name)}</button>
+          <div class="roster-heading">
+            <button class="roster-name-btn" onclick="openModal('${p.id}')">${escapeHtml(p.name)}</button>
+            <input class="roster-title-input" type="text" maxlength="4" placeholder="稱號" aria-label="${escapeHtml(p.name)}稱號" value="${escapeHtml(p.title || '')}" onchange="updateRosterPlayerTitle('${p.id}',this.value)" />
+            ${inLineup ? `<span class="roster-badge">第${activeGame===1?'一':'二'}場</span>` : ''}
+          </div>
           <div class="roster-pos-line">${posLine}</div>
         </div>
-        ${inLineup ? `<span class="roster-badge">第${activeGame===1?'一':'二'}場</span>` : ''}
         <div class="roster-stats roster-dual-stats">
           <div>AVG ${fmt3(b.avg)}</div>
           <div>${pit.ip > 0 ? 'ERA '+pit.era.toFixed(2) : ''}</div>
@@ -2161,6 +2163,13 @@ onSnapshot(teamRef, (docSnap) => {
     });
   }
 
+  function updateRosterPlayerTitle(id, value) {
+    const p = findPlayerById(id);
+    if (!p) return;
+    p.title = String(value || '').trim();
+    saveRoster();
+  }
+
   function setRosterSort(mode) {
     rosterSort = mode === 'name' ? 'name' : 'custom';
     saveRoster();
@@ -2208,7 +2217,8 @@ onSnapshot(teamRef, (docSnap) => {
     renderAttendanceInfo(p);
     document.getElementById('recordDate').value = todayStr();
     document.getElementById('pitchRecordDate').value = todayStr();
-    ['rec1B','rec2B','rec3B','recHR','recBB','recE','recFC','recOuts'].forEach(id2 => {
+    syncAttendanceFromRecords(p);
+    ['rec1B','rec2B','rec3B','recHR','recBB','recE','recSF','recFC','recOuts','recRBI'].forEach(id2 => {
       const el=document.getElementById(id2); if(el) el.value=0;
     });
     resetPitchInputs();
@@ -2231,7 +2241,7 @@ onSnapshot(teamRef, (docSnap) => {
   function updateModalSecondary(value) { const p = findPlayerById(currentModalPlayerId); if (!p) return; p.secondary = value; saveRoster(); renderCardStatInputs(p); }
 
   function renderPlayerPhotoPreview(p) {
-    const box = document.getElementById('playerPhotoPreview');
+    const box = document.getElementById('skillPlayerPhotoPreview') || document.getElementById('playerPhotoPreview');
     if (!box) return;
     loadPlayerPhoto(p.id).then(data => {
       if (!box) return;
@@ -2240,7 +2250,7 @@ onSnapshot(teamRef, (docSnap) => {
   }
 
   async function handlePlayerPhotoUpload(input) {
-    const p = findPlayerById(currentModalPlayerId);
+    const p = findPlayerById(currentSkillPlayerId || currentModalPlayerId);
     const file = input?.files?.[0];
     if (!p || !file) return;
     if (!file.type.startsWith('image/')) {
@@ -2297,7 +2307,7 @@ onSnapshot(teamRef, (docSnap) => {
   function renderCardStatInputs(p) {
     ensurePlayerGameFields(p);
     const stats = getCardStats(p);
-    const fields = { con:'cardStatCON', pow:'cardStatPOW', eye:'cardStatEYE', spd:'cardStatSPD', fld:'cardStatFLD' };
+    const fields = { con:'skillCardStatCON', pow:'skillCardStatPOW', eye:'skillCardStatEYE', spd:'skillCardStatSPD', fld:'skillCardStatFLD' };
     Object.entries(fields).forEach(([key,id]) => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -2308,7 +2318,7 @@ onSnapshot(teamRef, (docSnap) => {
   }
 
   function updateManualCardStat(key, value) {
-    const p = findPlayerById(currentModalPlayerId);
+    const p = findPlayerById(currentSkillPlayerId || currentModalPlayerId);
     if (!p) return;
     ensurePlayerGameFields(p);
     if (value === '') {
@@ -2322,7 +2332,7 @@ onSnapshot(teamRef, (docSnap) => {
   }
 
   function resetManualCardStats() {
-    const p = findPlayerById(currentModalPlayerId);
+    const p = findPlayerById(currentSkillPlayerId || currentModalPlayerId);
     if (!p) return;
     p.cardStats = {};
     saveRoster();
@@ -2332,26 +2342,19 @@ onSnapshot(teamRef, (docSnap) => {
   }
 
   function renderAttendanceInfo(p) {
-    const info = document.getElementById('attendanceInfo');
+    const info = document.getElementById('skillAttendanceInfo') || document.getElementById('attendanceInfo');
     if (!info) return;
     const progress = getAnnualGameProgress(p);
     info.innerHTML = `本年度出席：<b>${progress.attendance}/20</b> 場　・　EXP <b>${progress.exp}/100</b>${progress.skillUnlocked ? '　🟨 技能已解鎖' : ''}`;
   }
 
-  function markAttendanceToday() {
-    const p = findPlayerById(currentModalPlayerId);
-    if (!p) return;
+  function syncAttendanceFromRecords(p) {
     ensurePlayerGameFields(p);
-    const today = teamTodayStr();
-    if (p.attendanceRecords.includes(today)) {
-      showToast('今天已記錄出席，不會重複增加 EXP');
-      return;
-    }
-    p.attendanceRecords.push(today);
-    saveRoster();
+    const dates = (p.records || []).filter(r =>
+      ['singles','doubles','triples','hr','bb','errors','sf','fc','outs'].some(k => Number(r[k]) > 0)
+    ).map(r => String(r.date || '')).filter(Boolean);
+    p.attendanceRecords = [...new Set([...(p.attendanceRecords || []), ...dates])];
     renderAttendanceInfo(p);
-    renderRoster();
-    showToast('📅 出席已記錄 +5 EXP');
   }
 
   function openPlayerSkillModal(id) {
@@ -2366,6 +2369,9 @@ onSnapshot(teamRef, (docSnap) => {
       ? `Lv. <b>${String(progress.level).padStart(2,'0')}/10</b> ・ EXP <b>${progress.exp}/100</b><br>已完成 20 場出席，4 個技能欄位已解鎖。技能選擇內容可在後續版本補入。`
       : `目前 EXP <b>${progress.exp}/100</b> ・ 出席 <b>${progress.attendance}/20</b> 場<br>再累積 ${20-progress.attendance} 場出席即可解鎖 4 個技能欄位。`;
 
+    renderPlayerPhotoPreview(p);
+    renderCardStatInputs(p);
+    renderAttendanceInfo(p);
     grid.innerHTML = [0,1,2,3].map(i => {
       const skill = p.skills[i] || '';
       if (progress.skillUnlocked) {
@@ -2407,7 +2413,7 @@ onSnapshot(teamRef, (docSnap) => {
       <div style="font-weight:800;color:var(--brand-blue-dark);margin-bottom:4px;">Career Record</div>
       	打擊率AVG <b>${fmt3(s.avg)}</b>　
 	上壘率OBP <b>${fmt3(s.obp)}</b>　
-	長打率SLG <b>${fmt3(s.slg)}</b><br>
+	長打率SLG <b>${fmt3(s.slg)}</b>　OPS <b>${fmt3(s.ops)}</b><br>
       	AB: <b>${s.ab}</b>
 	Hit: <b>${s.hits}</b>
 	HR:  <b>${s.hr}</b>
@@ -2516,6 +2522,8 @@ function renderRecordList(p) {
     const inputE  = Number(document.getElementById('recE').value) || 0;
     const inputFC = Number(document.getElementById('recFC').value) || 0;
     const inputOuts = Number(document.getElementById('recOuts').value) || 0;
+    const inputSF = Number(document.getElementById('recSF').value) || 0;
+    const inputRBI = Number(document.getElementById('recRBI').value) || 0;
 
     if (!p.records) p.records = [];
     const existingIndex = p.records.findIndex(r => r.date === date);
@@ -2529,12 +2537,14 @@ function renderRecordList(p) {
       p.records[existingIndex].errors = (p.records[existingIndex].errors||0) + inputE;
       p.records[existingIndex].fc = (p.records[existingIndex].fc||0) + inputFC;
       p.records[existingIndex].outs += inputOuts;
+      p.records[existingIndex].sf = (p.records[existingIndex].sf||0) + inputSF;
+      p.records[existingIndex].rbi = (p.records[existingIndex].rbi||0) + inputRBI;
       showToast('同日紀錄已成功累加');
     } else {
       p.records.push({
         date,
         singles: input1B, doubles: input2B, triples: input3B, hr: inputHR,
-        bb: inputBB, errors: inputE, fc: inputFC, outs: inputOuts, rbi: 0,
+        bb: inputBB, errors: inputE, fc: inputFC, sf: inputSF, outs: inputOuts, rbi: inputRBI,
         boxContribution: { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0, rbi:0 }
       });
       showToast('紀錄已新增');
@@ -2544,7 +2554,8 @@ function renderRecordList(p) {
     renderModalSummary(p);
     renderRecordList(p);
 
-    ['rec1B','rec2B','rec3B','recHR','recBB','recE','recFC','recOuts'].forEach(id => document.getElementById(id).value = 0);
+    syncAttendanceFromRecords(p);
+    ['rec1B','rec2B','rec3B','recHR','recBB','recE','recSF','recFC','recOuts','recRBI'].forEach(id => document.getElementById(id).value = 0);
   }
 
   function deleteRecord(index) {
@@ -2597,14 +2608,9 @@ function formatPitchingSummary(s) {
 
   function switchPlayerStatTab(tab) {
     activePlayerStatTab = tab === 'pitching' ? 'pitching' : 'batting';
-    const batting = document.getElementById('battingPanel');
-    const pitching = document.getElementById('pitchingPanel');
-    const btab = document.getElementById('playerTabBatting');
-    const ptab = document.getElementById('playerTabPitching');
-    if (batting) batting.style.display = activePlayerStatTab === 'batting' ? 'block' : 'none';
-    if (pitching) pitching.style.display = activePlayerStatTab === 'pitching' ? 'block' : 'none';
-    if (btab) btab.classList.toggle('active', activePlayerStatTab === 'batting');
-    if (ptab) ptab.classList.toggle('active', activePlayerStatTab === 'pitching');
+    const panels = { batting:'battingPanel', pitching:'pitchingPanel' };
+    Object.entries(panels).forEach(([key,id]) => { const el=document.getElementById(id); if(el) el.style.display=activePlayerStatTab===key?'block':'none'; });
+    ['batting','pitching'].forEach(key => { const el=document.getElementById(`playerTab${key[0].toUpperCase()+key.slice(1)}`); if(el) el.classList.toggle('active',activePlayerStatTab===key); });
   }
 
   function renderPitchingSummary(p) {
@@ -3706,6 +3712,8 @@ function renderPitchingRecordList(p) {
     { code:'3B',  label:'三安',   field:'triples' },
     { code:'HR',  label:'全壘打', field:'hr' },
     { code:'BB',  label:'四壞',   field:'bb' },
+    { code:'SF',  label:'高飛犧牲打', field:'sf' },
+    { code:'DP',  label:'雙殺', field:'outs' },
     { code:'E',   label:'失誤',   field:'errors' },
     { code:'FC',  label:'野選',   field:'fc' },
     { code:'OUT', label:'出局',   field:'outs' },
@@ -3728,6 +3736,8 @@ function renderPitchingRecordList(p) {
     renderBoxScore();
   }
 
+  function refreshBoxScoreLineup() { renderBoxScore(); showToast(`已更新${boxGame===1?'第一場':'第二場'}打席紀錄名單`); }
+
   function renderBoxScoreHeader() {
     const thead = document.getElementById('boxScoreHead');
     let html = '<tr><th class="col-order">打序</th><th class="col-name" style="text-align:left;">球員</th>';
@@ -3741,8 +3751,8 @@ function renderPitchingRecordList(p) {
     const counts = new Array(BOX_COLS + 1).fill(0);
     boxScore[date].entries.forEach(e => {
       if (e.game !== game) return;
-      if (e.code === 'OUT' || e.code === 'FC') {
-        counts[e.col] = (counts[e.col] || 0) + 1;
+      if (e.code === 'OUT' || e.code === 'FC' || e.code === 'SF' || e.code === 'DP') {
+        counts[e.col] = (counts[e.col] || 0) + (e.code === 'DP' ? 2 : 1);
       }
     });
     return counts;
@@ -3777,7 +3787,7 @@ function renderPitchingRecordList(p) {
         const ent = boxScore[date].entries.find(e => e.playerId === p.id && Number(e.col ?? e.inning) === Number(col) && Number(e.game) === Number(boxGame));
         if (ent) {
           const def = RESULT_DEFS.find(r => r.code === ent.code);
-          const showRbi = ['1B','2B','3B','HR'].includes(ent.code);
+          const showRbi = true;
           const rbiValue = showRbi ? (Number.isFinite(Number(ent.rbi)) ? Number(ent.rbi) : 0) : null;
           cellsHtml += `<td><span class="box-chip res-${ent.code}">${def.label}${showRbi && rbiValue > 0 ? `<small class="box-chip-rbi">${rbiValue}</small>` : ''}<span class="box-chip-del" onclick="removeBoxEntry('${ent.id}')">✕</span></span></td>`;
         } else {
@@ -3812,7 +3822,7 @@ function renderPitchingRecordList(p) {
     const p = findPlayerById(playerId);
     const gameLabel = boxGame === 1 ? '第一場' : '第二場';
     document.getElementById('boxPickerTitle').textContent = `${p ? p.name : ''} · ${gameLabel} · 第 ${col} 打席`;
-    ['1B','2B','3B','HR'].forEach(code => { const el=document.getElementById(`rbi-${code}`); if(el) el.value = code==='HR' ? '1' : '0'; });
+    ['1B','2B','3B','HR','BB','SF','E','FC'].forEach(code => { const el=document.getElementById(`rbi-${code}`); if(el) el.value = code==='HR' ? '1' : '0'; });
     document.getElementById('boxPickerOverlay').classList.add('show');
   }
   function closeBoxPicker() {
@@ -3827,7 +3837,7 @@ function renderPitchingRecordList(p) {
     const { playerId, col, game } = currentBoxTarget;
     const def = RESULT_DEFS.find(r => r.code === code);
     const rbiEl = document.getElementById(`rbi-${code}`);
-    const rbi = ['1B','2B','3B','HR'].includes(code) ? Math.max(0, Math.min(4, parseInt(rbiEl ? rbiEl.value : (code==='HR'?'1':'0'),10) || 0)) : 0;
+    const rbi = Math.max(0, Math.min(4, parseInt(rbiEl ? rbiEl.value : (code==='HR'?'1':'0'),10) || 0));
     const date = todayStr();
     ensureBoxDate(date);
 
@@ -3866,7 +3876,7 @@ function renderPitchingRecordList(p) {
 
   // 依「今天」box entries，計算每位球員的加總數據
   function computeBoxTotalsForPlayerDate(playerId, date) {
-    const totals = { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0, rbi:0 };
+    const totals = { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, sf:0, fc:0, outs:0, rbi:0 };
     const dayData = boxScore[date];
     if (!dayData) return totals;
     dayData.entries.filter(e => e.playerId === playerId).forEach(e => {
@@ -3892,19 +3902,20 @@ function renderPitchingRecordList(p) {
       if (!p) return;
       if (!p.records) p.records = [];
       let rec = p.records.find(r => r.date === date);
-      const zero = { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0, rbi:0 };
+      const zero = { singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, sf:0, fc:0, outs:0, rbi:0 };
       const oldContribution = (rec && rec.boxContribution) ? rec.boxContribution : zero;
       const newContribution = computeBoxTotalsForPlayerDate(playerId, date);
 
       if (!rec) {
-        rec = { date, singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, fc:0, outs:0, boxContribution: {...zero} };
+        rec = { date, singles:0, doubles:0, triples:0, hr:0, bb:0, errors:0, sf:0, fc:0, outs:0, rbi:0, boxContribution: {...zero} };
         p.records.push(rec);
       }
-      ['singles','doubles','triples','hr','bb','errors','fc','outs','rbi'].forEach(field => {
+      ['singles','doubles','triples','hr','bb','errors','sf','fc','outs','rbi'].forEach(field => {
         const next = (rec[field] || 0) - (oldContribution[field] || 0) + (newContribution[field] || 0);
         rec[field] = next < 0 ? 0 : next;
       });
       rec.boxContribution = newContribution;
+      syncAttendanceFromRecords(p);
     });
   }
 
