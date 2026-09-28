@@ -576,6 +576,7 @@
   .box-chip.res-BB { background: #4b49b0; }
   .box-chip.res-FC { background: #b45f00; }
   .box-chip.res-E { background: #b0002b; }
+  .box-chip.res-DP { background: #6e6e73; }
   .box-chip.res-OUT { background: #6e6e73; }
   .box-chip-rbi {
     display:inline-flex; align-items:center; justify-content:center;
@@ -605,9 +606,11 @@
   .outcome-btn.res-BB { background: #5856d6; }
   .outcome-btn.res-E { background: #ff2d55; }
   .outcome-btn.res-SF { background: #168b70; }
-  .outcome-btn.res-DP { background: #6e6e73; }
+  .outcome-btn.res-DP { background: #8e8e93; }
   .outcome-btn.res-FC { background: #ff9500; }
   .outcome-btn.res-OUT { background: #8e8e93; }
+  .box-picker-footer { display:flex; justify-content:flex-end; margin-top:10px; }
+  .next-batter-btn { grid-column: 4; grid-row: 3; width:100%; min-width:0; padding:14px 4px; font-size:13px; font-weight:700; }
 
   /* ==================================================================
      🟥 NEWS 大廳首頁樣式
@@ -956,7 +959,20 @@
     .match-date-big { font-size:21px; min-width:48px; }
     .match-team-name-display { font-size:13px; }
     .score-panel-row { gap:5px; }
-    .bso-box { width:96px; }
+    .bso-box {
+    position: fixed;
+    bottom: 20px;      /* 改為定位在畫面右下角 */
+    right: 14px;
+    z-index: 5700;      /* 層級調高至 5700，高於 Modal overlay (5600)，確保不被快選面板遮擋 */
+    background: rgba(34, 37, 42, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    padding: 8px 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    width: 110px;
+  }
     .records-card { padding:10px; }
     .records-card-title { align-items:flex-start; }
     #rosterCardList { grid-template-columns:1fr; }
@@ -1201,6 +1217,7 @@
     <h2>計分板
       <span class="section-actions">
         <span id="scoreSaveIndicator" class="score-save-indicator" style="display:none;">● 尚未儲存</span>
+        <button class="btn-muted" onclick="refreshBoxScoreLineup()">↻ 更新</button>
         <button class="btn-add" onclick="saveScoreboard()">💾 SAVE</button>
       </span>
     </h2>
@@ -1293,17 +1310,7 @@
     </div>
     <p class="score-auto-note">AIT 每局比分會依「打席紀錄表」該局所有球員的 RBI 自動加總。</p>
 
-    <h2>打席紀錄表
-      <span class="section-actions">
-        <span id="boxSaveIndicator" class="save-indicator" style="display:none;">● 尚未儲存</span>
-        <button class="btn-muted" onclick="refreshBoxScoreLineup()">↻ 更新</button>
-        <button class="btn-add" onclick="saveBoxScoreToday()">💾 SAVE</button>
-      </span>
-    </h2>
-    <div class="game-tabs">
-      <button id="tabBoxGame1" class="game-tab active" onclick="switchBoxGame(1)">1st game</button>
-      <button id="tabBoxGame2" class="game-tab" onclick="switchBoxGame(2)">2nd game</button>
-    </div>
+    <h2>打席紀錄表</h2>
     <div id="boxScoreTableWrap" class="boxscore-wrap">
       <table class="boxscore-table">
         <thead id="boxScoreHead"></thead>
@@ -1598,13 +1605,15 @@
       <div class="outcome-hit-wrap"><select id="rbi-1B" class="outcome-rbi" aria-label="一安 RBI"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-1B" onclick="chooseBoxResult('1B')">1B</button></div>
       <div class="outcome-hit-wrap"><select id="rbi-2B" class="outcome-rbi" aria-label="二安 RBI"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-2B" onclick="chooseBoxResult('2B')">2B</button></div>
       <div class="outcome-hit-wrap"><select id="rbi-3B" class="outcome-rbi" aria-label="三安 RBI"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-3B" onclick="chooseBoxResult('3B')">3B</button></div>
-      <div class="outcome-hit-wrap"><select id="rbi-HR" class="outcome-rbi" aria-label="全壘打 RBI"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-HR" onclick="chooseBoxResult('HR')">HR</button></div>
+      <div class="outcome-hit-wrap"><select id="rbi-HR" class="outcome-rbi" aria-label="全壘打 RBI"><option selected>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-HR" onclick="chooseBoxResult('HR')">HR</button></div>
       <div class="outcome-hit-wrap"><select id="rbi-BB" class="outcome-rbi"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-BB" onclick="chooseBoxResult('BB')">BB</button></div>
-      <div class="outcome-hit-wrap"><select id="rbi-SF" class="outcome-rbi"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-SF" onclick="chooseBoxResult('SF')">SF</button></div>
+      <div class="outcome-hit-wrap">
+<select id="rbi-SF" class="outcome-rbi"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-SF" onclick="chooseBoxResult('SF')">SF</button></div>
       <div class="outcome-hit-wrap"><select id="rbi-E" class="outcome-rbi"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-E" onclick="chooseBoxResult('E')">E</button></div>
       <div class="outcome-hit-wrap"><select id="rbi-FC" class="outcome-rbi"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-FC" onclick="chooseBoxResult('FC')">FC</button></div>
       <button class="outcome-btn res-DP" onclick="chooseBoxResult('DP')">雙殺 DP</button>
       <button class="outcome-btn res-OUT" onclick="chooseBoxResult('OUT')">出局 OUT</button>
+      <button id="nextBatterBtn" class="outcome-btn res-1B next-batter-btn" onclick="nextBoxBatter()">NEXT→</button>
     </div>
   </div>
 </div>
@@ -3618,8 +3627,10 @@ function renderPitchingRecordList(p) {
   function switchScoreGame(gameNum) {
     if (scoreGame !== gameNum) calcScore();
     scoreGame = gameNum === 2 ? 2 : 1;
+    boxGame = scoreGame;
     applyRbiToScoreboard(scoreGame, todayStr());
     renderScoreboard();
+    renderBoxScore();
   }
 
  function onTeamChange(changedSide) {
@@ -3689,34 +3700,42 @@ function renderPitchingRecordList(p) {
 
   function saveScoreboard() {
     calcScore();
-    applyRbiToScoreboard(scoreGame);
-
+    boxGame = scoreGame;
     const date = todayStr();
+
+    // 計分板 SAVE 同時提交目前兩場的逐打席資料與球員統計，並同步目前比賽。
+    commitBoxScoreToRoster(date);
+    applyRbiToScoreboard(scoreGame, date);
     const syncedMatch = syncScoreboardToTodaySchedule(date, scoreGame);
     saveAllToFirebase();
 
+    isBoxDirty = false;
     isScoreDirty = false;
+    updateBoxSaveIndicator();
     updateScoreSaveIndicator();
+    render();
+    renderScoreboard();
+    renderBoxScore();
     renderSchedule();
     renderRecordsPage();
 
     const gameLabel = scoreGame === 1 ? '第一場' : '第二場';
     showToast(syncedMatch
-      ? `💾 ${gameLabel}計分板已儲存，並同步至今日 SCHEDULE`
-      : `💾 ${gameLabel}計分板已儲存（今天尚無對應 SCHEDULE）`);
+      ? `💾 ${gameLabel}計分板與打席紀錄已儲存，並同步至今日 SCHEDULE`
+      : `💾 ${gameLabel}計分板與打席紀錄已儲存（今天尚無對應 SCHEDULE）`);
   }
 
   const RESULT_DEFS = [
-    { code:'1B',  label:'一安',   field:'singles' },
-    { code:'2B',  label:'二安',   field:'doubles' },
-    { code:'3B',  label:'三安',   field:'triples' },
-    { code:'HR',  label:'全壘打', field:'hr' },
-    { code:'BB',  label:'四壞',   field:'bb' },
-    { code:'SF',  label:'高飛犧牲打', field:'sf' },
-    { code:'DP',  label:'雙殺', field:'outs' },
-    { code:'E',   label:'失誤',   field:'errors' },
-    { code:'FC',  label:'野選',   field:'fc' },
-    { code:'OUT', label:'出局',   field:'outs' },
+    { code:'1B',  label:'1B',   field:'singles' },
+    { code:'2B',  label:'2B',   field:'doubles' },
+    { code:'3B',  label:'3B',   field:'triples' },
+    { code:'HR',  label:'HR', field:'hr' },
+    { code:'BB',  label:'BB',   field:'bb' },
+    { code:'SF',  label:'SF', field:'sf' },
+    { code:'DP',  label:'DP', field:'DP' },
+    { code:'E',   label:'E',   field:'errors' },
+    { code:'FC',  label:'FC',   field:'fc' },
+    { code:'OUT', label:'Out',   field:'outs' },
   ];
   const BOX_COLS = 7;
   let boxGame = 1;
@@ -3725,18 +3744,15 @@ function renderPitchingRecordList(p) {
   function ensureBoxDate(date) { if (!boxScore[date]) boxScore[date] = { entries: [] }; }
 
   function updateBoxSaveIndicator() {
-    const el = document.getElementById('boxSaveIndicator');
-    if (el) el.style.display = isBoxDirty ? 'inline' : 'none';
+    // 打席紀錄與計分板共用同一個 SAVE；保留此函式以相容既有資料流程。
+    updateScoreSaveIndicator();
   }
 
-  function switchBoxGame(gameNum) {
-    boxGame = gameNum;
-    document.getElementById('tabBoxGame1').classList.toggle('active', gameNum === 1);
-    document.getElementById('tabBoxGame2').classList.toggle('active', gameNum === 2);
+  function refreshBoxScoreLineup() {
+    boxGame = scoreGame;
     renderBoxScore();
+    showToast(`已更新${boxGame===1?'第一場':'第二場'}打席紀錄名單`);
   }
-
-  function refreshBoxScoreLineup() { renderBoxScore(); showToast(`已更新${boxGame===1?'第一場':'第二場'}打席紀錄名單`); }
 
   function renderBoxScoreHeader() {
     const thead = document.getElementById('boxScoreHead');
@@ -3759,6 +3775,7 @@ function renderPitchingRecordList(p) {
   }
 
   function renderBoxScore() {
+    boxGame = scoreGame;
     const date = todayStr();
     ensureBoxDate(date);
 
@@ -3767,9 +3784,10 @@ function renderPitchingRecordList(p) {
     const emptyMsg = document.getElementById('boxScoreEmptyMsg');
     tbody.innerHTML = '';
 
-    const sourceLineup = boxGame === 1 ? lineups.game1 : lineups.game2;
+    boxGame = scoreGame;
+    const sourceLineup = scoreGame === 1 ? lineups.game1 : lineups.game2;
     const rows = sourceLineup.filter(e => findPlayerById(e.id));
-    const gameLabel = boxGame === 1 ? '第一場' : '第二場';
+    const gameLabel = scoreGame === 1 ? '第一場' : '第二場';
 
     if (!rows.length) {
       wrap.style.display = 'none';
@@ -3784,7 +3802,7 @@ function renderPitchingRecordList(p) {
       const p = findPlayerById(entry.id);
       let cellsHtml = '';
       for (let col = 1; col <= BOX_COLS; col++) {
-        const ent = boxScore[date].entries.find(e => e.playerId === p.id && Number(e.col ?? e.inning) === Number(col) && Number(e.game) === Number(boxGame));
+        const ent = boxScore[date].entries.find(e => e.playerId === p.id && Number(e.col ?? e.inning) === Number(col) && Number(e.game) === Number(scoreGame));
         if (ent) {
           const def = RESULT_DEFS.find(r => r.code === ent.code);
           const showRbi = true;
@@ -3803,7 +3821,7 @@ function renderPitchingRecordList(p) {
       tbody.appendChild(tr);
     });
 
-    const outCounts = computeColumnOutCounts(date, boxGame);
+    const outCounts = computeColumnOutCounts(date, scoreGame);
     let outCellsHtml = '';
     for (let col = 1; col <= BOX_COLS; col++) {
       outCellsHtml += `<td>${outCounts[col] || 0}</td>`;
@@ -3813,25 +3831,103 @@ function renderPitchingRecordList(p) {
     outRow.innerHTML = `<td class="col-sticky-out" colspan="2" style="text-align:right;">出局數</td>${outCellsHtml}`;
     tbody.appendChild(outRow);
 
-    if (applyRbiToScoreboard(boxGame) && scoreGame === boxGame) renderScoreboard();
+    if (applyRbiToScoreboard(scoreGame) && scoreGame === boxGame) renderScoreboard();
   }
 
   let currentBoxTarget = null;
+
+  function getNextBoxBatterTarget(playerId, col, game, date = todayStr()) {
+    const lineup = game === 1 ? lineups.game1 : lineups.game2;
+    const validLineup = lineup.filter(e => findPlayerById(e.id));
+    if (!validLineup.length) return null;
+
+    const currentIndex = validLineup.findIndex(e => e.id === playerId);
+    const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % validLineup.length : 0;
+    const outCounts = computeColumnOutCounts(date, game);
+    const nextCol = (outCounts[col] || 0) >= 3 ? col + 1 : col;
+
+    if (nextCol > BOX_COLS) return null;
+    return { playerId: validLineup[nextIndex].id, col: nextCol, game };
+  }
+
+  function updateBoxPickerTitle() {
+    if (!currentBoxTarget) return;
+    const p = findPlayerById(currentBoxTarget.playerId);
+    const gameLabel = currentBoxTarget.game === 1 ? '第一場' : '第二場';
+    document.getElementById('boxPickerTitle').textContent = `${p ? p.name : ''} · ${gameLabel} · 第 ${currentBoxTarget.col} 局`;
+  }
+
   function openBoxPicker(playerId, col) {
-    currentBoxTarget = { playerId, col, game: boxGame };
+    const game = scoreGame;
+    const date = todayStr();
+    ensureBoxDate(date);
+    const outCounts = computeColumnOutCounts(date, game);
+
+    // 該局已三出局，不允許再把新的打席記在同一局；直接提示使用下一局。
+    if ((outCounts[col] || 0) >= 3) {
+      const nextCol = col + 1;
+      if (nextCol <= BOX_COLS) {
+        showToast(`第${col}局已三出局，請記錄到第${nextCol}局`);
+      } else {
+        showToast('第7局已三出局，該場比賽已完成');
+      }
+      return;
+    }
+
+    currentBoxTarget = { playerId, col, game };
     const p = findPlayerById(playerId);
-    const gameLabel = boxGame === 1 ? '第一場' : '第二場';
-    document.getElementById('boxPickerTitle').textContent = `${p ? p.name : ''} · ${gameLabel} · 第 ${col} 打席`;
+    const gameLabel = game === 1 ? '第一場' : '第二場';
+    document.getElementById('boxPickerTitle').textContent = `${p ? p.name : ''} · ${gameLabel} · 第 ${col} 局`;
     ['1B','2B','3B','HR','BB','SF','E','FC'].forEach(code => { const el=document.getElementById(`rbi-${code}`); if(el) el.value = code==='HR' ? '1' : '0'; });
     document.getElementById('boxPickerOverlay').classList.add('show');
   }
+
   function closeBoxPicker() {
     document.getElementById('boxPickerOverlay').classList.remove('show');
     currentBoxTarget = null;
   }
-  function closeBoxPickerOnOverlay(e) { if (e.target.id === 'boxPickerOverlay') closeBoxPicker(); }
 
-  // 🔸 僅暫存於本機畫面，不即時同步雲端、不即時更新球員資料，需按 SAVE 才會生效
+  function closeBoxPickerOnOverlay(e) {
+    // 快速輸入介面只允許右上角 X 關閉，不再點擊背景關閉。
+    if (e.target.id === 'boxPickerOverlay') return;
+  }
+
+  function nextBoxBatter() {
+    if (!currentBoxTarget) return;
+    const next = getNextBoxBatterTarget(currentBoxTarget.playerId, currentBoxTarget.col, currentBoxTarget.game);
+    if (!next) {
+      showToast('第7局已三出局，沒有下一局可記錄');
+      return;
+    }
+
+    const date = todayStr();
+    ensureBoxDate(date);
+    const exists = boxScore[date].entries.some(e =>
+      e.playerId === next.playerId && Number(e.col ?? e.inning) === Number(next.col) && Number(e.game) === Number(next.game)
+    );
+    if (exists) {
+      // 若下一棒在該局已有紀錄，仍可繼續跳到下一位，避免覆蓋既有資料。
+      const lineup = next.game === 1 ? lineups.game1 : lineups.game2;
+      const validLineup = lineup.filter(e => findPlayerById(e.id));
+      const idx = validLineup.findIndex(e => e.id === next.playerId);
+      const nextIndex = idx >= 0 ? (idx + 1) % validLineup.length : 0;
+      const outCounts = computeColumnOutCounts(date, next.game);
+      const colAfter = (outCounts[next.col] || 0) >= 3 ? next.col + 1 : next.col;
+      if (colAfter > BOX_COLS) {
+        showToast('第7局已三出局，沒有下一局可記錄');
+        return;
+      }
+      currentBoxTarget = { playerId: validLineup[nextIndex].id, col: colAfter, game: next.game };
+    } else {
+      currentBoxTarget = next;
+    }
+
+    ['1B','2B','3B','HR','BB','SF','E','FC'].forEach(code => { const el=document.getElementById(`rbi-${code}`); if(el) el.value = code==='HR' ? '1' : '0'; });
+    updateBoxPickerTitle();
+    document.getElementById('boxPickerOverlay').classList.add('show');
+  }
+
+  // 🔸 僅暫存於本機畫面，不即時同步雲端、不即時更新球員資料，需按計分板 SAVE 才會生效
   function chooseBoxResult(code) {
     if (!currentBoxTarget) return;
     const { playerId, col, game } = currentBoxTarget;
@@ -3842,21 +3938,21 @@ function renderPitchingRecordList(p) {
     ensureBoxDate(date);
 
     const exists = boxScore[date].entries.find(e => e.playerId === playerId && Number(e.col ?? e.inning) === Number(col) && Number(e.game) === Number(game));
-    if (exists) { showToast('此打席已有紀錄，請先移除再重新記錄'); closeBoxPicker(); return; }
+    if (exists) { showToast('此打席已有紀錄，請先移除再重新記錄'); return; }
 
     boxScore[date].entries.push({ id: makeId(), playerId, col, code, game, rbi });
     isBoxDirty = true;
+    isScoreDirty = true;
     updateBoxSaveIndicator();
 
-    closeBoxPicker();
+    // 保持快速輸入介面開啟；只有 X 或「下一位打者」會離開目前打者。
     renderBoxScore();
     if (scoreGame === game) {
       applyRbiToScoreboard(game, date);
       renderScoreboard();
     }
     const p = findPlayerById(playerId);
-    const gameLabel = game === 1 ? '第一場' : '第二場';
-    showToast(`已記錄 ${p ? p.name : ''}（${gameLabel}）第${col}打席：${def.label}（尚未儲存）`);
+    showToast(`已記錄 ${p ? p.name : ''}（${game === 1 ? '第一場' : '第二場'}）第${col}局：${def.label}（尚未儲存）`);
   }
 
   // 🔸 僅移除本機暫存紀錄，需按 SAVE 才會同步至雲端與球員資料
@@ -3865,12 +3961,11 @@ function renderPitchingRecordList(p) {
     ensureBoxDate(date);
     boxScore[date].entries = boxScore[date].entries.filter(e => e.id !== entryId);
     isBoxDirty = true;
+    isScoreDirty = true;
     updateBoxSaveIndicator();
     renderBoxScore();
-    if (scoreGame === boxGame) {
-      applyRbiToScoreboard(boxGame, date);
-      renderScoreboard();
-    }
+    applyRbiToScoreboard(scoreGame, date);
+    renderScoreboard();
     showToast('已移除該筆暫存紀錄（尚未儲存）');
   }
 
@@ -3939,32 +4034,6 @@ function renderPitchingRecordList(p) {
     match[gameKey].scoreB = aitRuns;
     return match;
   }
-
-  function saveBoxScoreToday() {
-    const date = todayStr();
-    commitBoxScoreToRoster(date);
-    applyRbiToScoreboard(boxGame, date);
-
-    const syncedMatch = syncScoreboardToTodaySchedule(date, boxGame);
-    saveAllToFirebase();
-
-    isBoxDirty = false;
-    isScoreDirty = false;
-    updateBoxSaveIndicator();
-    updateScoreSaveIndicator();
-    render();
-    renderScoreboard();
-
-    if (syncedMatch) {
-      renderSchedule();
-      renderRecordsPage();
-      const gameLabel = boxGame === 1 ? '第一場' : '第二場';
-      showToast(`💾 ${gameLabel}打擊成績已儲存，RBI、AIT每局比分與 SCHEDULE 已同步`);
-    } else {
-      showToast('💾 今日逐打席紀錄已儲存，球員資料已同步更新（今天尚無對應 SCHEDULE）');
-    }
-  }
-
 
   /* ==================================================================
      🟪 SECTION 4：賽程表 JS
