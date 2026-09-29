@@ -5,8 +5,8 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AIT Softball</title><!--
-AIT SOFTBALL — SOURCE ORGANIZATION
+<title>AIT Softball</title>
+<!--AIT SOFTBALL — SOURCE ORGANIZATION
 01. Firebase SDK / cloud synchronization
 02. Global state and shared utilities
 03. NEWS / home
@@ -17,6 +17,16 @@ AIT SOFTBALL — SOURCE ORGANIZATION
 08. STANDINGS / league records
 09. Shared dialogs, navigation, initialization
 Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main script.
+01Firebase 雲端同步、登入驗證
+02全域變數、共用工具函式
+03NEWS 首頁、賽程摘要、MLB
+04ROSTER 球員名單、打擊與投球紀錄
+05PLAYER CARD 球員卡、能力值、技能
+06LINE UP 打序、守備位置、打席紀錄
+07SCORES 記分板、BOX SCORE
+08SCHEDULE 賽程管理
+09STANDINGS 戰績表、聯盟排名
+10導覽列、彈出視窗、初始化
 -->
 
 
@@ -1068,7 +1078,7 @@ Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main sc
       <p id="newsScheduleEmptyMsg" class="empty-msg" style="display:none;">No Games</p>
     </div>
 
-    <h2 style="margin-top:20px;">TODAY's GAMES</h2>
+    <h2 style="margin-top:20px;">!請將本頁面加入最愛，iOS開啟網頁→"分享"加入"主畫面"!</h2>
     <div class="news-scores-section">
       <div class="news-scores-column">
         <h3>MLB TODAY</h3>
@@ -1096,53 +1106,32 @@ Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main sc
  <!-- 🔥 當前最新版本 -->
 <div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px;">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-<span style="background: #e3f7e6; color: #1a7a2e; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">v2.2.2 (Current)</span>
-<span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-09-16</span>
+<span style="background: #e3f7e6; color: #1a7a2e; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">v3.0 (Current)</span>
+<span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-09-29</span>
           </div>
           <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13.5px; color: #1c1c1e; line-height: 1.7;">
-			<li>🔸 <b>ios開啟網頁後，點擊"分享"加入"主頁面"可快速進入AIT系統</b></li>
-            <li>🔸 <b>戰績表系統</b>：選單新增STANDING「聯盟戰績」與「對戰戰績」，詳列AIT與聯盟內球隊對戰紀錄。</li>
-            <li>🔸 <b>引入投球紀錄</b>：ROSTER內也可以切換投手資料與歷年紀錄2 WAY PLAYER</li>
-            <li>🔸 <b>SCHEDULE優化排序功能</b>：預設本月份與未來月份賽程資料，避免全年資料霧颯颯</li>
-            <li>🔸 <b>頁面優化</b>：例行頁面優化，最適手機排版功能。</li>
+		<li>🔸 <b>球員卡上線</b>：技能庫啟動，踴躍出席增加經驗值取得你的SS技能</li>
+		<li>🔸 <b>打席紀錄表更新</b>：支援3出局跨局紀錄、增加RBI紀錄，優化打擊紀錄功能</li>
+		<li>🔸 <b>記分板</b>：記分板功能優化，懸浮化BSO紀錄表。</li>
           </ul>
         	</div>  
     
-        <!-- 歷史版本 4 -->
+        <!-- 歷史版本  5 -->
         <div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px; opacity: 0.85;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-        <span style="background: #f0f0f2; color: #636366; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">v2.1.0</span>
+        <span style="background: #f0f0f2; color: #636366; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">v2.6.0</span>
         <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-09-16</span>
         </div>
           <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13.5px; color: #1c1c1e; line-height: 1.7;">
-            <li>🔹 <b>全新美式雙場次戰報</b>：選單新增「今日賽後戰報」，可一鍵交叉提取 Schedule 與 Box 雙場次數據進行高畫質 Canvas 圖表渲染。</li>
-             <li>🔹 <b>行動裝置主畫面圖示支援</b>：全面最佳化 iOS 與 Android 加入主畫面設定。</li>
+		<li>🔹 <b>MVP戰報</b>：選單新增「今日賽後戰報」，一鍵提取雙場次數據進行高畫質 Canvas 圖表渲染。</li>
+		<li>🔹 <b>戰績表系統</b>：選單新增STANDING「聯盟戰績」與「對戰戰績」，詳列AIT與聯盟內球隊對戰紀錄。</li>
+		<li>🔹 <b>引入投球紀錄</b>：ROSTER內也可以切換投手資料與歷年紀錄2 WAY PLAYER</li>
+		<li>🔹 <b>SCHEDULE優化排序功能</b>：預設本月份與未來月份賽程資料，避免全年資料霧颯颯</li>
+		<li>🔹 <b>頁面優化</b>：最適手機排版功能。</li>
         </ul>
         </div>
 
-        <!-- 歷史版本 2 -->
-        <div style="margin-bottom: 16px; border-bottom: 1px dashed #e5e5ea; padding-bottom: 10px; opacity: 0.85;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-            <span style="background: #f0f0f2; color: #636366; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">v1.5.0</span>
-            <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-05-20</span>
-          </div>
-          <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13px; color: #48484a; line-height: 1.6;">
-            <li>🔹 <b>LINE 打序智慧匯入</b>：新增智慧分析輸入框，支援將 LINE 聊天室內容複製貼上自動過濾、解析並一鍵匯入當日打序。</li>
-            <li>🔹 <b>即時紀錄器</b>：計分板介面右側新增壞球、好球、出局數點擊燈號。</li>
-          </ul>
-        </div>
 
-        <!-- 歷史版本 1 -->
-        <div style="opacity: 0.6;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-            <span style="background: #f0f0f2; color: #636366; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;">v1.0.0</span>
-            <span style="font-size: 12px; color: #8e8e93; font-weight: 600;">2026-01-10</span>
-          </div>
-          <ul style="list-style: none; padding-left: 4px; margin: 0; font-size: 13px; color: #48484a; line-height: 1.6;">
-            <li>🔹 <b>AIT Softball 雲端資料庫上線</b>：全面接軌 Firebase，打通多網頁多端即時同步數據。</li>
-            <li>🔹 <b>守備位置視覺化熱區</b>：直覺式球場守備位置拖拉與晶片化分配顯示面板。</li>
-          </ul>
-        </div>
   </div>
       </div>
     </div>
@@ -1200,7 +1189,7 @@ Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main sc
       <div style="width:62px;text-align:center">當日守備</div><div style="width:26px"></div>
     </div>
     <ul id="lineupList"></ul>
-    <p id="lineupEmptyMsg" class="empty-msg">打序表是空的，從「球員資料」分頁點擊 ⠿ 加入球員，或用下方 LINE 匯入功能</p>
+    <p id="lineupEmptyMsg" class="empty-msg">從「球員資料」分頁點擊 ⠿ 加入球員，或用下方 LINE 匯入功能</p>
 
     <h2>Defend Position</h2>
 
@@ -1326,7 +1315,7 @@ Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main sc
         </div>
       </div>
     </div>
-    <p class="score-auto-note">AIT 每局比分會依「打席紀錄表」該局所有球員的 RBI 自動加總。</p>
+    <p class="score-auto-note">AIT 每局比分會依「打席紀錄表」自動加總。</p>
 
     <h2>打席紀錄表</h2>
     <div id="boxScoreTableWrap" class="boxscore-wrap">
@@ -1335,7 +1324,7 @@ Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main sc
         <tbody id="boxScoreBody"></tbody>
       </table>
     </div>
-    <p id="boxScoreEmptyMsg" class="empty-msg">目前打序是空的，請先到 Line UP 分頁建立打序</p>
+    <p id="boxScoreEmptyMsg" class="empty-msg">請先到 Line UP 分頁建立打序</p>
   </div>
 
   <!-- ============================================================= -->
@@ -1433,7 +1422,7 @@ Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main sc
     <h2>SCHEDULE</h2>
 
     <div class="roster-panel">
-      <div class="match-top-row" style="margin-bottom:8px;">
+      <div class="match-top-row" style="margin-bottom:10px;">
         <input type="date" id="matchDateInput" />
         <select class="hour-select" id="matchStartInput">
           <option value="08" selected>08</option>
@@ -1445,11 +1434,10 @@ Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main sc
           <option value="14">14</option>
           <option value="15">15</option>
           <option value="16">16</option>
-          <option value="17">17</option>
+
         </select>
-        <span>～</span>
+        <span>-</span>
         <select class="hour-select" id="matchEndInput">
-          <option value="08">08</option>
           <option value="09">09</option>
           <option value="10" selected>10</option>
           <option value="11">11</option>
@@ -1928,7 +1916,7 @@ onSnapshot(teamRef, (docSnap) => {
       '2B':85, 'LF':85,
       '3B':80, 'SF':80,
       '1B':75,
-      'RF':60, 'C':60
+      'RF':70, 'C':65
     };
     const fld = fldMap[p.primary] ?? 70;
 
@@ -2102,7 +2090,7 @@ onSnapshot(teamRef, (docSnap) => {
       li.className = 'roster-row';
       li.dataset.playerId = p.id;
       li.innerHTML = `
-        <div class="roster-handle" data-player-id="${p.id}" title="長按後上下拖曳排序">⠿</div>
+        <div class="roster-handle" data-player-id="${p.id}" title="長按後拖曳排序">⠿</div>
         <div class="roster-number ${p.number ? '' : 'empty'}">${displayNumber(p.number)}</div>
         <div class="roster-main">
           <div class="roster-heading">
@@ -2760,7 +2748,7 @@ function renderPitchingRecordList(p) {
     const existing = p.pitchingRecords.find(r => r.date === date);
     if (existing) {
       Object.keys(values).forEach(k => existing[k] = (Number(existing[k]) || 0) + values[k]);
-      showToast('同日投球紀錄已成功累加');
+      showToast('同日投球紀錄已累加');
     } else {
       p.pitchingRecords.push({ date, ...values });
       showToast('投球紀錄已新增');
@@ -2799,7 +2787,7 @@ function renderPitchingRecordList(p) {
   }
 
   function copyGame1ToGame2() {
-    showConfirm('確定要把「第一場打序」完整複製並覆蓋到「第二場打序」嗎？此動作會覆蓋第二場目前的打序內容。', () => {
+    showConfirm('確定要把「第一場打序」覆蓋「第二場打序」嗎？此動作會覆蓋第二場目前的打序內容。', () => {
       lineups.game2 = JSON.parse(JSON.stringify(lineups.game1));
       saveLineup();
       showToast('已成功複製第一場打序至第二場');
@@ -2808,7 +2796,7 @@ function renderPitchingRecordList(p) {
   }
 
   function clearPreviousDayData() {
-    showConfirm('確定要清空「前一日」的打序（第一場+第二場）與紀錄器逐打席紀錄嗎？球員資料中的歷史打擊紀錄不會被刪除，僅重置打序表與紀錄器顯示，方便建立新的一天。', () => {
+    showConfirm('確定要清空「前一日」的打序（第一場+第二場）與打席紀錄嗎？球員資料中的歷史打擊紀錄不會被刪除，僅建立新的一天。', () => {
       lineups = { game1: [], game2: [] };
       boxScore = {};
       scoreboards = {};
@@ -2817,7 +2805,7 @@ function renderPitchingRecordList(p) {
       saveLineup();
       saveAllToFirebase();
       render();
-      showToast('已清空前一日打序（第一場+第二場）與逐打席紀錄');
+      showToast('已清空前一日打序與打席紀錄');
     });
   }
 
@@ -3687,33 +3675,16 @@ function renderPitchingRecordList(p) {
     botScores.push(botInput ? botInput.value : '');
   }
 
-  // ==========================================================
-  // 保存目前隊伍名稱
-  // ==========================================================
+
   const oldTopTeam = topSelect.value;
   const oldBotTeam = botSelect.value;
 
-  // ==========================================================
-  // 原本的功能：  // 改變一邊時，另一邊自動變成另一支隊伍
-  // ==========================================================
   if (changedSide === 'top') {
     botSelect.value = oldTopTeam === '客隊' ? 'AIT' : '客隊';
   } else {
     topSelect.value = oldBotTeam === '客隊' ? 'AIT' : '客隊';
   }
 
-  // ==========================================================
-  // 交換兩邊的每局分數
-  //
-  // 例如：
-  // 原本：
-  // Top = 客隊 → 1
-  // Bottom = AIT → 0
-  //
-  // Switch 後：
-  // Top = AIT → 0
-  // Bottom = 客隊 → 1
-  // ==========================================================
   for (let i = 1; i <= 7; i++) {
     const topInput = document.getElementById(`top_${i}`);
     const botInput = document.getElementById(`bot_${i}`);
@@ -3825,7 +3796,7 @@ function renderPitchingRecordList(p) {
 
     if (!rows.length) {
       wrap.style.display = 'none';
-      emptyMsg.textContent = `目前「${gameLabel}」打序是空的，請先到 Line UP 分頁建立打序`;
+      emptyMsg.textContent = `目前「${gameLabel}」打序是空的，請先到 Line UP頁面建立打序`;
       emptyMsg.style.display = 'block';
       return;
     }
@@ -4236,7 +4207,7 @@ function renderPitchingRecordList(p) {
       tr.innerHTML = `
         <td>${formatDateNoYear(m.date)}</td>
         <td>${m.start || '--'}:00</td>
-        <td>AIT vs ${escapeHtml(m.teamA || '對手隊伍')}</td>
+        <td>${escapeHtml(m.teamA || '對手隊伍')}</td>
         <td>${getCompetitionLabel(m) ? `<span class="competition-badge">${escapeHtml(getCompetitionLabel(m))}</span>` : '—'}</td>
       `;
       tbody.appendChild(tr);
@@ -4269,7 +4240,7 @@ function renderPitchingRecordList(p) {
     renderSchedule();
     renderRecordsPage();
 
-    document.getElementById('matchDateInput').value = '';
+    document.getElementById('matchDateInput').value = '  ';
     document.getElementById('matchCompetitionInput').value = '';
     document.getElementById('matchTeamAInput').value = '';
     showToast('已新增賽程');
