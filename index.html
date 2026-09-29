@@ -5,7 +5,20 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AIT Softball</title>
+<title>AIT Softball</title><!--
+AIT SOFTBALL — SOURCE ORGANIZATION
+01. Firebase SDK / cloud synchronization
+02. Global state and shared utilities
+03. NEWS / home
+04. ROSTER / player records / player-card configuration and rendering
+05. LINE UP / field / batting entries
+06. SCORES / scoreboard and box score
+07. SCHEDULE / fixtures
+08. STANDINGS / league records
+09. Shared dialogs, navigation, initialization
+Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main script.
+-->
+
 
 <!-- 📱 加入主畫面圖示設定 -->
 <link rel="apple-touch-icon" href="ait-logo.jpg">
@@ -939,6 +952,11 @@
     color:#8e8e93; font-weight:800; font-size:12px;
   }
   .skill-slot.locked{ opacity:.6; }
+  .skill-slot.unlocked{ border-style:solid; border-color:#005a9c; color:#005a9c; }
+  .skill-slot.gold-skill, .player-card-skill.gold-skill{
+    border-color:#ffcc00; background:linear-gradient(135deg,rgba(255,204,0,.24),rgba(180,120,0,.18)); color:#ffdf55;
+    box-shadow:inset 0 0 0 1px rgba(255,220,80,.25);
+  }
   .skill-slot .skill-slot-num{ font-size:10px; color:#b0b0b5; }
 
   @media (max-width:600px){
@@ -1565,17 +1583,16 @@
 <div id="skillModalOverlay" class="modal-overlay" onclick="closeSkillModalOnOverlay(event)" style="align-items:center;">
   <div class="modal-box" onclick="event.stopPropagation()" style="max-width:390px;border-radius:18px;">
     <div class="modal-header">
-      <span id="skillModalTitle" style="font-weight:800;font-size:16px;flex:1;">PLAYER SKILLS</span>
+      <span id="skillModalTitle" style="font-weight:800;font-size:16px;flex:1;">PLAYER CARD</span>
       <button class="modal-close" onclick="closeSkillModal()">✕</button>
     </div>
     <div class="modal-summary" id="skillModalSummary"></div>
     <div class="skill-modal-grid" id="skillModalGrid"></div>
     <div class="modal-form" style="margin-top:12px;">
-      <h3>🃏 球員卡設定</h3>
-      <div class="photo-upload-row">
+         <div class="photo-upload-row">
         <div class="photo-preview" id="skillPlayerPhotoPreview">PHOTO</div>
         <div class="photo-upload-info">
-          <label>球員大頭照（建議正面照片）</label>
+          <label>球員卡照片</label>
           <input type="file" id="skillPlayerPhotoInput" accept="image/*" onchange="handlePlayerPhotoUpload(this)" />
         </div>
       </div>
@@ -1672,6 +1689,37 @@
   let rosterViewMode = 'list';
   const playerPhotoCache = {};
   let currentSkillPlayerId = null;
+
+  /* ================================================================
+     PLAYER CARD CONFIGURATION — 球員卡規則，未來調整技能名稱、解鎖等級與卡片技能格規則，優先修改此區。
+     ================================================================ */
+  const PLAYER_CARD_CONFIG = {
+    skillLevels: [3, 5, 7, 10],
+    beginnerSkills: ['送球O','初球O','走壘O','守備職人','低球O','高球O','得點圈O','流打','固打','拉打','推打','逆境O','內野安打'],
+    advancedSkills: ['一球入魂','重砲出擊','安打製造機','高球必打','低球必打','電光石火','威壓感','藝術的流打','廣角砲','勝負師','魔術師','左腕殺手','精神的支柱','雷射肩'],
+    beginnerSlotCount:  3,
+    goldSlotIndex: 3
+  };
+
+  function chooseRandomSkill(pool, excluded) {
+    const available = pool.filter(function(skill) { return excluded.indexOf(skill) === -1; });
+    if (!available.length) return '';
+    return available[Math.floor(Math.random() * available.length)];
+  }
+
+  function grantPlayerSkills(player, level) {
+    ensurePlayerGameFields(player);
+    let changed = false;
+    for (let slot = 0; slot < PLAYER_CARD_CONFIG.skillLevels.length; slot++) {
+      if (level < PLAYER_CARD_CONFIG.skillLevels[slot] || player.skills[slot]) continue;
+      const pool = slot === PLAYER_CARD_CONFIG.goldSlotIndex
+        ? PLAYER_CARD_CONFIG.advancedSkills : PLAYER_CARD_CONFIG.beginnerSkills;
+      const usedBeginner = player.skills.slice(0, PLAYER_CARD_CONFIG.beginnerSlotCount);
+      const skill = chooseRandomSkill(pool, slot === PLAYER_CARD_CONFIG.goldSlotIndex ? [] : usedBeginner);
+      if (skill) { player.skills[slot] = skill; changed = true; }
+    }
+    return changed;
+  }
   let lineups = { game1: [], game2: [] };
   let boxScore = {};
   let scoreboards = {};
@@ -1834,7 +1882,7 @@ onSnapshot(teamRef, (docSnap) => {
     const attendance = uniqueDays.length;
     const exp = Math.min(100, attendance * 5);
     const level = Math.min(10, Math.floor(exp / 10) + 1);
-    return { year, attendance, exp, level, skillUnlocked: attendance >= 20 };
+    return { year, attendance, exp, level, skillUnlocked: level >= 3 };
   }
 
   function clampCardStat(value, fallback) {
@@ -2122,17 +2170,19 @@ onSnapshot(teamRef, (docSnap) => {
       return;
     }
 
+    let skillsChanged = false;
     container.innerHTML = players.map(p => {
       ensurePlayerGameFields(p);
       const stats = getCardStats(p);
       const progress = getAnnualGameProgress(p);
+      if (grantPlayerSkills(p, progress.level)) skillsChanged = true;
       const skills = (p.skills || ['', '', '', '']).slice(0,4);
       const position = p.primary || '—';
       return `
         <div class="player-card-wrap">
           <div class="player-card" onclick="openPlayerSkillModal('${p.id}')" data-card-player-id="${p.id}">
             <div class="player-card-top">
-              <span class="player-card-diamond">DIAMOND</span>
+              <span class="player-card-diamond">DIAMOND💎</span>
               <span class="player-card-rating">${formatCardRating(stats)}</span>
             </div>
             <div class="player-card-photo" id="cardPhoto_${p.id}">
@@ -2156,12 +2206,13 @@ onSnapshot(teamRef, (docSnap) => {
               <span class="player-card-exp-value">${progress.exp}/100</span>
             </div>
             <div class="player-card-skills">
-              ${skills.map((skill,i) => `<div class="player-card-skill ${progress.skillUnlocked?'unlocked':''}">${skill ? escapeHtml(skill) : `<span>SKILL ${i+1}</span>`}</div>`).join('')}
+              ${skills.map((skill,i) => `<div class="player-card-skill ${skill?'unlocked':''} ${i===PLAYER_CARD_CONFIG.goldSlotIndex?'gold-skill':''}">${skill ? escapeHtml(skill) : `<span>Lv.${PLAYER_CARD_CONFIG.skillLevels[i]} SKILL</span>`}</div>`).join('')}
             </div>
-            <div class="player-card-hint">${progress.skillUnlocked ? '點擊卡片：選擇 / 編輯技能' : `出席 ${progress.attendance}/20 場後解鎖技能`}</div>
+            <div class="player-card-hint">Lv.3 / 5 / 7 解鎖一般技能；Lv.10 解鎖SS技能</div>
           </div>
         </div>`;
     }).join('');
+    if (skillsChanged) saveRoster();
 
     players.forEach(p => {
       loadPlayerPhoto(p.id).then(data => {
@@ -2372,40 +2423,23 @@ onSnapshot(teamRef, (docSnap) => {
     ensurePlayerGameFields(p);
     currentSkillPlayerId = id;
     const progress = getAnnualGameProgress(p);
+    if (grantPlayerSkills(p, progress.level)) saveRoster();
     const grid = document.getElementById('skillModalGrid');
     const summary = document.getElementById('skillModalSummary');
-    summary.innerHTML = progress.skillUnlocked
-      ? `Lv. <b>${String(progress.level).padStart(2,'0')}/10</b> ・ EXP <b>${progress.exp}/100</b><br>已完成 20 場出席，4 個技能欄位已解鎖。技能選擇內容可在後續版本補入。`
-      : `目前 EXP <b>${progress.exp}/100</b> ・ 出席 <b>${progress.attendance}/20</b> 場<br>再累積 ${20-progress.attendance} 場出席即可解鎖 4 個技能欄位。`;
-
+    summary.innerHTML = `Lv. <b>${String(progress.level).padStart(2,'0')}/10</b> ・ EXP <b>${progress.exp}/100</b><br>Lv.3、5、7、10解鎖技能格：`;
     renderPlayerPhotoPreview(p);
     renderCardStatInputs(p);
     renderAttendanceInfo(p);
-    grid.innerHTML = [0,1,2,3].map(i => {
+    grid.innerHTML = PLAYER_CARD_CONFIG.skillLevels.map(function(requiredLevel, i) {
       const skill = p.skills[i] || '';
-      if (progress.skillUnlocked) {
-        return `<div class="skill-slot">
-          <span class="skill-slot-num">SKILL ${i+1}</span>
-          <input type="text" value="${escapeHtml(skill)}" placeholder="輸入技能名稱"
-            style="width:100%;padding:6px 4px;text-align:center;font-size:11px;"
-            oninput="updatePlayerSkill(${i},this.value)">
-        </div>`;
-      }
-      return `<div class="skill-slot locked">
-        <span class="skill-slot-num">SKILL ${i+1}</span>
-        <span>🔒 未解鎖</span>
+      const unlocked = progress.level >= requiredLevel;
+      const slotClass = 'skill-slot' + (unlocked ? ' unlocked' : ' locked') + (i === PLAYER_CARD_CONFIG.goldSlotIndex ? ' gold-skill' : '');
+      return `<div class="${slotClass}">
+        <span class="skill-slot-num">${i === PLAYER_CARD_CONFIG.goldSlotIndex ? 'GOLD SKILL' : 'SKILL ' + (i+1)} · Lv.${requiredLevel}</span>
+        <span>${unlocked ? (escapeHtml(skill || '技能尚未配置')) : '🔒 未解鎖'}</span>
       </div>`;
     }).join('');
     document.getElementById('skillModalOverlay').classList.add('show');
-  }
-
-  function updatePlayerSkill(index, value) {
-    const p = findPlayerById(currentSkillPlayerId);
-    if (!p) return;
-    ensurePlayerGameFields(p);
-    p.skills[index] = String(value || '').trim();
-    saveRoster();
-    renderRoster();
   }
 
   function closeSkillModal() {
