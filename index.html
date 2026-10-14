@@ -279,6 +279,76 @@ Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main sc
   .pos-row label { font-size: 12px; color: #636366; display: block; margin: 0 0 4px; }
   .stat-input-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
 
+  /* ==================== PLAYER RECORDS ==================== */
+  .record-entry-details {
+    background:#fff; border-radius:12px; margin-bottom:12px; overflow:hidden;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .record-entry-details > summary {
+    list-style:none; cursor:pointer; padding:11px 12px; font-size:14px; font-weight:800;
+    color:#1c1c1e; display:flex; align-items:center; gap:7px;
+  }
+  .record-entry-details > summary::-webkit-details-marker { display:none; }
+  .record-entry-details > summary::before {
+    content:'▶'; font-size:10px; color:var(--brand-blue); transition:transform .15s ease;
+  }
+  .record-entry-details[open] > summary::before { transform:rotate(90deg); }
+  .record-entry-form { padding:0 10px 10px; }
+  .record-entry-form .stat-input-row { gap:5px; margin-top:3px; }
+  .record-entry-form .stat-input-row label {
+    font-size:10px; line-height:1.1; margin:4px 0 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .record-entry-form .stat-input-row input {
+    padding:8px 3px; font-size:14px; min-height:38px; text-align:center;
+  }
+  .record-entry-form > label { font-size:11px; color:#636366; display:block; margin:4px 0 3px; }
+  .record-entry-form > input[type="date"] { padding:8px 9px; font-size:14px; min-height:38px; }
+
+  .season-block { margin-top:10px; }
+  .season-block + .season-block { margin-top:14px; }
+  .season-title {
+    display:flex; align-items:center; gap:6px; margin:0 0 6px; padding-left:8px;
+    font-size:12px; font-weight:900; color:var(--brand-blue-dark); text-transform:uppercase;
+    border-left:3px solid var(--brand-blue);
+  }
+  .season-title.postseason { border-left-color:#ff9500; color:#9a5700; }
+  /* 個人資料紀錄表：表頭與資料列必須使用完全相同的內容寬度。
+     右側紅色 X 保留在表格外的獨立欄位，不再讓資料列因 padding-right 而縮短。 */
+  .record-table-wrap {
+    width:100%;
+    box-sizing:border-box;
+    padding-right:30px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .record-grid {
+    display:grid; grid-template-columns:52px repeat(9,minmax(0,1fr));
+    width:100%; min-width:0; font-size:11px;
+    box-sizing:border-box;
+  }
+  .record-grid-cell {
+    min-width:0; padding:7px 3px; text-align:center; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums;
+    border-right:1px solid #e5e5ea; border-bottom:1px solid #e5e5ea;
+  }
+  .record-grid-cell:first-child { border-left:1px solid #e5e5ea; }
+  .record-grid-header .record-grid-cell {
+    background:#f3f6fa; color:#48484a; font-weight:900; border-top:1px solid #e5e5ea;
+  }
+  .record-grid-row .record-grid-cell { background:#fff; color:#1c1c1e; font-weight:600; }
+  .record-grid-header .record-grid-cell:first-child { border-top-left-radius:8px; }
+  .record-grid-header .record-grid-cell:last-child { border-top-right-radius:8px; border-right:1px solid #e5e5ea; }
+  .record-grid-row:last-child .record-grid-cell:first-child { border-bottom-left-radius:8px; }
+  .record-grid-row:last-child .record-grid-cell:last-child { border-bottom-right-radius:8px; }
+  .record-row-wrap { position:relative; padding-right:0; margin-bottom:4px; }
+  .record-row-wrap .record-delete {
+    position:absolute; right:-28px; top:50%; transform:translateY(-50%);
+    width:25px; height:25px; padding:0; border:0; border-radius:50%;
+    background:transparent; color:var(--brand-red); font-size:16px; font-weight:900;
+  }
+  .record-row-wrap .record-delete:active { background:#ffe5e5; }
+  .record-empty { color:#8e8e93; font-size:12px; padding:8px 2px; }
+
   .game-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
   .game-tab {
     flex: 1; padding: 10px; font-size: 14px; font-weight: 700; border-radius: 10px;
@@ -1515,25 +1585,25 @@ Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main sc
 
     <!-- 1. 歷史紀錄 -->
     <div class="modal-history">
-      <h3>Regular Season</h3>
+      <h3>Player Record</h3>
       <div id="recordList"></div>
     </div>
 
-    <!-- 2. 新增當日打擊紀錄 -->
-    <div class="modal-form">
-      <h3>新增當日打擊紀錄</h3>
-      <label>日期</label>
-      <input type="date" id="recordDate" />
-      
-      <div class="stat-input-row">
-        <div><label>一安 1B</label><input type="number" min="0" id="rec1B" value="0" /></div><div><label>二安 2B</label><input type="number" min="0" id="rec2B" value="0" /></div><div><label>三安 3B</label><input type="number" min="0" id="rec3B" value="0" /></div><div><label>全壘打 HR</label><input type="number" min="0" id="recHR" value="0" /></div><div><label>四壞 BB</label><input type="number" min="0" id="recBB" value="0" /></div>
+    <!-- 2. 新增當日打擊紀錄：預設收合 -->
+    <details class="record-entry-details">
+      <summary>新增當日打擊紀錄</summary>
+      <div class="record-entry-form">
+        <label>日期</label>
+        <input type="date" id="recordDate" />
+        <div class="stat-input-row">
+          <div><label>一安 1B</label><input type="number" min="0" id="rec1B" value="0" /></div><div><label>二安 2B</label><input type="number" min="0" id="rec2B" value="0" /></div><div><label>三安 3B</label><input type="number" min="0" id="rec3B" value="0" /></div><div><label>全壘打 HR</label><input type="number" min="0" id="recHR" value="0" /></div><div><label>四壞 BB</label><input type="number" min="0" id="recBB" value="0" /></div>
+        </div>
+        <div class="stat-input-row">
+          <div><label>失誤 E</label><input type="number" min="0" id="recE" value="0" /></div><div><label>犧牲打 SF</label><input type="number" min="0" id="recSF" value="0" /></div><div><label>野選 FC</label><input type="number" min="0" id="recFC" value="0" /></div><div><label>出局 OUT</label><input type="number" min="0" id="recOuts" value="0" /></div><div><label>打點 RBI</label><input type="number" min="0" id="recRBI" value="0" /></div>
+        </div>
+        <button class="btn-add" style="width:100%;margin-top:9px;" onclick="saveRecord()">新增紀錄</button>
       </div>
-      <div class="stat-input-row">
-        <div><label>失誤 E</label><input type="number" min="0" id="recE" value="0" /></div><div><label>犧牲打 SF</label><input type="number" min="0" id="recSF" value="0" /></div><div><label>野選 FC</label><input type="number" min="0" id="recFC" value="0" /></div><div><label>出局 OUT</label><input type="number" min="0" id="recOuts" value="0" /></div><div><label>打點 RBI</label><input type="number" min="0" id="recRBI" value="0" /></div>
-      </div>
-      
-      <button class="btn-add" style="width:100%;margin-top:12px;" onclick="saveRecord()">新增紀錄</button>
-    </div>
+    </details>
     </div>
 
     <!-- 投手紀錄 -->
@@ -1541,28 +1611,33 @@ Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main sc
       <div class="modal-summary" id="pitchingSummary"></div>
 
       <div class="modal-history">
-        <h3>Regular Season</h3>
+        <h3>Player Record</h3>
         <div id="pitchingRecordList"></div>
       </div>
 
-      <div class="modal-form">
-        <h3>新增當日投球紀錄</h3>
-        <label>日期</label>
-        <input type="date" id="pitchRecordDate" />
-        <div class="stat-input-row pitching-simple-row">
-          <div><label>投球局 IP</label><input type="number" min="0" step="0.1" id="pitchIP" value="0" /></div>
-          <div><label>勝投 W</label><input type="number" min="0" id="pitchW" value="0" /></div>
-          <div><label>敗投 L</label><input type="number" min="0" id="pitchL" value="0" /></div>
-          <div><label>救援 SV</label><input type="number" min="0" id="pitchSV" value="0" /></div>
+      <!-- 新增當日投球紀錄：預設收合 -->
+      <details class="record-entry-details">
+        <summary>新增當日投球紀錄</summary>
+        <div class="record-entry-form">
+          <label>日期</label>
+          <input type="date" id="pitchRecordDate" />
+          <div class="stat-input-row pitching-simple-row">
+            <div><label>投球局 IP</label><input type="number" min="0" step="0.1" id="pitchIP" value="0" /></div>
+            <div><label>勝投 W</label><input type="number" min="0" id="pitchW" value="0" /></div>
+            <div><label>敗投 L</label><input type="number" min="0" id="pitchL" value="0" /></div>
+            <div><label>救援 SV</label><input type="number" min="0" id="pitchSV" value="0" /></div>
+            <div><label>中繼 HLD</label><input type="number" min="0" id="pitchHLD" value="0" /></div>
+          </div>
+          <div class="stat-input-row pitching-simple-row">
+            <div><label>四壞 BB</label><input type="number" min="0" id="pitchBB" value="0" /></div>
+            <div><label>三振 SO</label><input type="number" min="0" id="pitchSO" value="0" /></div>
+            <div><label>失分 R</label><input type="number" min="0" id="pitchR" value="0" /></div>
+            <div><label>責失 ER</label><input type="number" min="0" id="pitchER" value="0" /></div>
+            <div><label>被安 H</label><input type="number" min="0" id="pitchH" value="0" /></div>
+          </div>
+          <button class="btn-add" style="width:100%;margin-top:9px;" onclick="savePitchingRecord()">新增紀錄</button>
         </div>
-        <div class="stat-input-row pitching-simple-row">
-          <div><label>四壞 BB</label><input type="number" min="0" id="pitchBB" value="0" /></div>
-          <div><label>三振 SO</label><input type="number" min="0" id="pitchSO" value="0" /></div>
-          <div><label>失分 R</label><input type="number" min="0" id="pitchR" value="0" /></div>
-          <div><label>責失 ER</label><input type="number" min="0" id="pitchER" value="0" /></div>
-        </div>
-        <button class="btn-add" style="width:100%;margin-top:12px;" onclick="savePitchingRecord()">新增紀錄</button>
-      </div>
+      </details>
     </div>
   </div>
 </div>
@@ -1618,7 +1693,6 @@ Player-card rules are centralized under PLAYER CARD CONFIGURATION in the main sc
       <div class="outcome-hit-wrap"><select id="rbi-FC" class="outcome-rbi"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select><button class="outcome-btn res-FC" onclick="chooseBoxResult('FC')">FC</button></div>
       <button class="outcome-btn res-DP" onclick="chooseBoxResult('DP')">雙殺 DP</button>
       <button class="outcome-btn res-OUT" onclick="chooseBoxResult('OUT')">出局 OUT</button>
-      <button id="nextBatterBtn" class="outcome-btn res-1B next-batter-btn" onclick="nextBoxBatter()">NEXT→</button>
     </div>
   </div>
 </div>
@@ -2035,8 +2109,29 @@ onSnapshot(teamRef, (docSnap) => {
      ================================================================== */
   let currentModalPlayerId = null;
 
+  function getRecordSeasonType(date) {
+    const matches = (schedule && Array.isArray(schedule.matches))
+      ? schedule.matches.filter(m => String(m.date || '') === String(date || ''))
+      : [];
+    // 唯一判斷來源：SCHEDULE 是否在該日期標示「里長杯」
+    return matches.some(m => String(m.competition || '').trim() === '里長杯') ? 'postseason' : 'regular';
+  }
+
+  function getRecordYear(date) {
+    const year = String(date || '').slice(0,4);
+    return /^\d{4}$/.test(year) ? year : '未知年份';
+  }
+
+  function formatRecordDate(date) {
+    if (!date) return '--/--';
+    const parts = String(date).split('-');
+    if (parts.length >= 3) return `${Number(parts[1])}/${Number(parts[2])}`;
+    return String(date);
+  }
+
   function computeStats(player) {
-    const records = player.records || [];
+    // Career Record 只計 Regular Season；Postseason / 里長杯完全排除。
+    const records = (player.records || []).filter(r => getRecordSeasonType(r.date) === 'regular');
     let singles=0, doubles=0, triples=0, hr=0, bb=0, fc=0, sf=0, errors=0, outs=0, rbi=0;
     records.forEach(r => {
       singles += Number(r.singles)||0; doubles += Number(r.doubles)||0; triples += Number(r.triples)||0;
@@ -2458,83 +2553,45 @@ onSnapshot(teamRef, (docSnap) => {
 
 function renderRecordList(p) {
   const container = document.getElementById('recordList');
-  
-  // 1. 複製並依日期降序排序
-  const records = [...(p.records || [])].sort((a, b) =>
-    String(b.date).localeCompare(String(a.date))
-  );
+  if (!container) return;
 
+  const records = [...(p.records || [])].sort((a,b) => String(b.date||'').localeCompare(String(a.date||'')));
   if (!records.length) {
-    container.innerHTML = `
-      <p style="color:#8e8e93;font-size:13px;">
-        尚無歷史打擊紀錄
-      </p>
-    `;
+    container.innerHTML = '<div class="record-empty">尚無歷史打擊紀錄</div>';
     return;
   }
 
-  // 2. 按年份進行群組化 (Group by Year)
-  const groupedByYear = records.reduce((groups, record) => {
-    // 假設 date 格式為 'YYYY-MM-DD' 或包含四位數年份
-    const year = record.date ? String(record.date).substring(0, 4) : '未知年份';
-    if (!groups[year]) {
-      groups[year] = [];
-    }
-    groups[year].push(record);
-    return groups;
-  }, {});
+  const grouped = {};
+  records.forEach(record => {
+    const year = getRecordYear(record.date);
+    if (!grouped[year]) grouped[year] = { regular: [], postseason: [] };
+    grouped[year][getRecordSeasonType(record.date)].push(record);
+  });
 
-  // 3. 取得所有年份並降序排列 (最新年份在最上面)
-  const years = Object.keys(groupedByYear).sort((a, b) => b.localeCompare(a));
-
-  // 4. 渲染 HTML (使用 <details> 實現原生折疊效果)
-  container.innerHTML = years.map((year, yearIndex) => {
-    const yearRecords = groupedByYear[year];
-
-    const recordsHtml = yearRecords.map(record => {
-      // ⚠️ 正確找回原陣列 p.records 中的索引，確保刪除功能正常
+  const years = Object.keys(grouped).sort((a,b) => b.localeCompare(a));
+  const labels = ['Date','1B','2B','3B','HR','RBI','BB','E','FC','OUT'];
+  const makeGrid = (rows) => {
+    const head = `<div class="record-grid record-grid-header">${labels.map(x => `<div class="record-grid-cell">${x}</div>`).join('')}</div>`;
+    const body = rows.map(record => {
       const index = p.records.indexOf(record);
-
-      return `
-        <div class="record-item">
-          <div class="record-main">
-            <div class="record-date">
-              ${escapeHtml(record.date || '')}
-            </div>
-            <div class="record-stats">
-		1B:	${record.singles || 0}
-		2B:	${record.doubles || 0}
-		3B:	${record.triples || 0}
-		HR:	${record.hr || 0}
-		RBI:	${record.rbi || 0}
-		BB:	${record.bb || 0}
-		E:	${record.errors || 0}
-		FC:	${record.fc || 0}
-		Out:	${record.outs || 0}
-            </div>
-          </div>
-          <button
-            class="rec-del"
-            onclick="deleteRecord(${index})">
-            ✕
-          </button>
-        </div>
-      `;
+      const vals = [formatRecordDate(record.date), Number(record.singles)||0, Number(record.doubles)||0, Number(record.triples)||0, Number(record.hr)||0, Number(record.rbi)||0, Number(record.bb)||0, Number(record.errors)||0, Number(record.fc)||0, Number(record.outs)||0];
+      return `<div class="record-row-wrap"><div class="record-grid record-grid-row">${vals.map(x => `<div class="record-grid-cell">${escapeHtml(String(x))}</div>`).join('')}</div><button class="record-delete" title="刪除紀錄" onclick="deleteRecord(${index})">✕</button></div>`;
     }).join('');
+    return `<div class="record-table-wrap">${head}${body}</div>`;
+  };
 
-    // 第一個年份預設展開 (open)，其餘折疊
+  container.innerHTML = years.map((year, yearIndex) => {
+    const seasons = grouped[year];
+    const totalCount = seasons.regular.length + seasons.postseason.length;
+    const blocks = ['regular','postseason'].map(type => {
+      const rows = seasons[type];
+      if (!rows.length) return '';
+      const title = type === 'postseason' ? 'Postseason · 里長杯' : 'Regular Season';
+      const cls = type === 'postseason' ? ' postseason' : '';
+      return `<div class="season-block"><div class="season-title${cls}">${title}<span style="font-weight:600;color:#8e8e93;">(${rows.length})</span></div>${makeGrid(rows)}</div>`;
+    }).join('');
     const isOpen = yearIndex === 0 ? 'open' : '';
-
-    return `
-      <details class="year-group" ${isOpen}>
-        <summary class="year-header">
-          <span>${escapeHtml(year)} 年 (${yearRecords.length} 筆紀錄)</span>
-        </summary>
-        <div class="year-content">
-          ${recordsHtml}
-        </div>
-      </details>
-    `;
+    return `<details class="year-group" ${isOpen}><summary class="year-header"><span>${escapeHtml(year)} 年 (${totalCount} 筆紀錄)</span></summary><div class="year-content">${blocks}</div></details>`;
   }).join('');
 }
 
@@ -2606,15 +2663,10 @@ function renderRecordList(p) {
   let activePlayerStatTab = 'batting';
 
   function computePitchingStats(player) {
-    const records = player.pitchingRecords || [];
-    const total = {
-      games: records.length, ip:0, h:0, r:0, er:0, bb:0, so:0, hr:0,
-      w:0, l:0, sv:0, hld:0
-    };
+    const records = (player.pitchingRecords || []).filter(r => getRecordSeasonType(r.date) === 'regular');
+    const total = { games: records.length, ip:0, h:0, r:0, er:0, bb:0, so:0, hr:0, w:0, l:0, sv:0, hld:0 };
     records.forEach(r => {
-      ['ip','h','r','er','bb','so','hr','w','l','sv','hld'].forEach(k => {
-        total[k] += Number(r[k]) || 0;
-      });
+      ['ip','h','r','er','bb','so','hr','w','l','sv','hld'].forEach(k => { total[k] += Number(r[k]) || 0; });
     });
     total.era = total.ip > 0 ? total.er * 7 / total.ip : null;
     total.whip = total.ip > 0 ? (total.bb + total.h) / total.ip : null;
@@ -2651,82 +2703,49 @@ function formatPitchingSummary(s) {
 
 
 function renderPitchingRecordList(p) {
-  const container = document.getElementById('pitchingRecordList'); // 請依實際 DOM ID 調整
-  
-  // 1. 複製並依日期降序排序
-  const records = [...(p.pitchingRecords || p.records || [])].sort((a, b) =>
-    String(b.date).localeCompare(String(a.date))
-  );
+  const container = document.getElementById('pitchingRecordList');
+  if (!container) return;
 
+  const records = [...(p.pitchingRecords || [])].sort((a,b) => String(b.date||'').localeCompare(String(a.date||'')));
   if (!records.length) {
-    container.innerHTML = `
-      <p style="color:#8e8e93;font-size:13px;">
-        尚無歷史投球紀錄
-      </p>
-    `;
+    container.innerHTML = '<div class="record-empty">尚無歷史投球紀錄</div>';
     return;
   }
 
-  // 2. 按年份進行群組化 (Group by Year)
-  const groupedByYear = records.reduce((groups, record) => {
-    const year = record.date ? String(record.date).substring(0, 4) : '未知年份';
-    if (!groups[year]) {
-      groups[year] = [];
-    }
-    groups[year].push(record);
-    return groups;
-  }, {});
+  const grouped = {};
+  records.forEach(record => {
+    const year = getRecordYear(record.date);
+    if (!grouped[year]) grouped[year] = { regular: [], postseason: [] };
+    grouped[year][getRecordSeasonType(record.date)].push(record);
+  });
 
-  // 3. 取得所有年份並降序排列
-  const years = Object.keys(groupedByYear).sort((a, b) => b.localeCompare(a));
-
-  // 4. 渲染 HTML
-  container.innerHTML = years.map((year, yearIndex) => {
-    const yearRecords = groupedByYear[year];
-
-    const recordsHtml = yearRecords.map(record => {
-      // 正確找回在原本陣列中的索引，確保刪除功能正常
-      const originalArray = p.pitchingRecords || p.records;
-      const index = originalArray.indexOf(record);
-
-      return `
-        <div class="record-item">
-          <div class="record-main">
-            <div class="record-date">
-              ${escapeHtml(record.date || '')}
-            </div>
-            <div class="record-stats">
-		IP:	${record.ip || 0}
-		W:	${record.w || 0}
-		L:	${record.l || 0}
-		SV:	${record.sv || 0}
-		SO:	${record.so || 0}            
-		BB:	${record.bb || 0}
-		 R:	${record.r || 0}
-		ER:	${record.er || 0}
-            </div>
-          </div>
-          <button
-            class="rec-del"  onclick="deletePitchingRecord(${index})"> ✕</button>
-        </div>
-      `;
+  const years = Object.keys(grouped).sort((a,b) => b.localeCompare(a));
+  const labels = ['Date','IP','W','L','SV','HLD','SO','BB','R','ER'];
+  const makeGrid = (rows) => {
+    const head = `<div class="record-grid record-grid-header">${labels.map(x => `<div class="record-grid-cell">${x}</div>`).join('')}</div>`;
+    const body = rows.map(record => {
+      const index = p.pitchingRecords.indexOf(record);
+      const vals = [formatRecordDate(record.date), Number(record.ip)||0, Number(record.w)||0, Number(record.l)||0, Number(record.sv)||0, Number(record.hld)||0, Number(record.so)||0, Number(record.bb)||0, Number(record.r)||0, Number(record.er)||0];
+      return `<div class="record-row-wrap"><div class="record-grid record-grid-row">${vals.map(x => `<div class="record-grid-cell">${escapeHtml(String(x))}</div>`).join('')}</div><button class="record-delete" title="刪除紀錄" onclick="deletePitchingRecord(${index})">✕</button></div>`;
     }).join('');
+    return `<div class="record-table-wrap">${head}${body}</div>`;
+  };
 
-    // 第一個年份預設展開 (open)，其餘折疊
+  container.innerHTML = years.map((year, yearIndex) => {
+    const seasons = grouped[year];
+    const totalCount = seasons.regular.length + seasons.postseason.length;
+    const blocks = ['regular','postseason'].map(type => {
+      const rows = seasons[type];
+      if (!rows.length) return '';
+      const title = type === 'postseason' ? 'Postseason · 里長杯' : 'Regular Season';
+      const cls = type === 'postseason' ? ' postseason' : '';
+      return `<div class="season-block"><div class="season-title${cls}">${title}<span style="font-weight:600;color:#8e8e93;">(${rows.length})</span></div>${makeGrid(rows)}</div>`;
+    }).join('');
     const isOpen = yearIndex === 0 ? 'open' : '';
-
-    return `
-      <details class="year-group" ${isOpen}>
-        <summary class="year-header">
-          <span>${escapeHtml(year)} 年 (${yearRecords.length} 筆紀錄)</span>
-        </summary>
-        <div class="year-content">
-          ${recordsHtml}
-        </div>
-      </details>
-    `;
+    return `<details class="year-group" ${isOpen}><summary class="year-header"><span>${escapeHtml(year)} 年 (${totalCount} 筆紀錄)</span></summary><div class="year-content">${blocks}</div></details>`;
   }).join('');
 }
+
 
   function resetPitchInputs() {
     ['pitchIP','pitchH','pitchR','pitchER','pitchBB','pitchSO','pitchHR','pitchW','pitchL','pitchSV','pitchHLD']
@@ -3897,12 +3916,13 @@ function renderPitchingRecordList(p) {
     if (e.target.id === 'boxPickerOverlay') return;
   }
 
-  function nextBoxBatter() {
-    if (!currentBoxTarget) return;
+  function nextBoxBatter(autoAdvance = false) {
+    if (!currentBoxTarget) return false;
     const next = getNextBoxBatterTarget(currentBoxTarget.playerId, currentBoxTarget.col, currentBoxTarget.game);
     if (!next) {
-      showToast('第7局已三出局，沒有下一局可記錄');
-      return;
+      if (!autoAdvance) showToast('第7局已三出局，沒有下一局可記錄');
+      closeBoxPicker();
+      return false;
     }
 
     const date = todayStr();
@@ -3920,7 +3940,8 @@ function renderPitchingRecordList(p) {
       const colAfter = (outCounts[next.col] || 0) >= 3 ? next.col + 1 : next.col;
       if (colAfter > BOX_COLS) {
         showToast('第7局已三出局，沒有下一局可記錄');
-        return;
+        closeBoxPicker();
+        return false;
       }
       currentBoxTarget = { playerId: validLineup[nextIndex].id, col: colAfter, game: next.game };
     } else {
@@ -3930,6 +3951,7 @@ function renderPitchingRecordList(p) {
     ['1B','2B','3B','HR','BB','SF','E','FC'].forEach(code => { const el=document.getElementById(`rbi-${code}`); if(el) el.value = code==='HR' ? '1' : '0'; });
     updateBoxPickerTitle();
     document.getElementById('boxPickerOverlay').classList.add('show');
+    return true;
   }
 
   // 🔸 僅暫存於本機畫面，不即時同步雲端、不即時更新球員資料，需按計分板 SAVE 才會生效
@@ -3950,14 +3972,17 @@ function renderPitchingRecordList(p) {
     isScoreDirty = true;
     updateBoxSaveIndicator();
 
-    // 保持快速輸入介面開啟；只有 X 或「下一位打者」會離開目前打者。
     renderBoxScore();
     if (scoreGame === game) {
       applyRbiToScoreboard(game, date);
       renderScoreboard();
     }
+
     const p = findPlayerById(playerId);
-    showToast(`已記錄 ${p ? p.name : ''}（${game === 1 ? '第一場' : '第二場'}）第${col}局：${def.label}（尚未儲存）`);
+    const label = def ? def.label : code;
+    showToast(`已記錄 ${p ? p.name : ''}（${game === 1 ? '第一場' : '第二場'}）第${col}局：${label}`);
+    // 所有結果按鈕完成後自動跳到下一位打者，不必再按 NEXT。
+    setTimeout(() => nextBoxBatter(true), 80);
   }
 
   // 🔸 僅移除本機暫存紀錄，需按 SAVE 才會同步至雲端與球員資料
@@ -4081,16 +4106,9 @@ function renderPitchingRecordList(p) {
   }
 
   /* ==================== SCHEDULE / 里長杯 ==================== */
-  const RICHANG_CUP_START = '2026-10-18';
-  const RICHANG_CUP_END = '2026-12-13';
-
-  function isRichangCupGame(date) {
-    return String(date || '') >= RICHANG_CUP_START && String(date || '') <= RICHANG_CUP_END;
-  }
-
+  // Postseason / 里長杯 完全以 SCHEDULE 的「賽事」欄位為準，日期不參與分類。
   function getCompetitionLabel(match) {
-    if (match?.competition) return match.competition;
-    return isRichangCupGame(match?.date) ? '里長杯' : '';
+    return String(match?.competition || '').trim();
   }
 
   function renderSchedule() {
@@ -4230,9 +4248,8 @@ function renderPitchingRecordList(p) {
     schedule.matches.push({
       id: makeId(), date, start, end,
       teamA, teamB: 'AIT',
-      // Keep the existing 10/18–12/13 Richang Cup compatibility:
-      // explicit selection takes priority; otherwise the existing date rule remains.
-      competition: competition || (isRichangCupGame(date) ? '里長杯' : ''),
+      // 賽事類型只由 SCHEDULE 的選項決定；日期本身不再自動判斷里長杯。
+      competition,
       game1: { scoreA: null, scoreB: null },
       game2: { scoreA: null, scoreB: null }
     });
